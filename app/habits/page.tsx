@@ -24,6 +24,11 @@ export default function HabitsPage() {
   }, []);
 
   const toggleHabit = (id: string) => {
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+    
     const updatedHabits = habits.map((habit) =>
       habit.id === id ? { ...habit, completedToday: !habit.completedToday } : habit
     );

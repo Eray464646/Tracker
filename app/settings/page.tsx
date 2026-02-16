@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bell, Moon, Globe, Lock, HelpCircle, Mail, Smartphone, ChevronRight, Download } from 'lucide-react';
+import { Bell, Moon, Globe, Lock, HelpCircle, Mail, Smartphone, ChevronRight, Download, Flame } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { AppData } from '@/types';
 import CustomAlert from '@/components/CustomAlert';
@@ -10,6 +10,7 @@ export default function SettingsPage() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [showResetStreaksAlert, setShowResetStreaksAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [darkMode, setDarkMode] = useState<'light' | 'dark' | 'auto'>('auto');
 
@@ -19,6 +20,11 @@ export default function SettingsPage() {
     if (savedMode) {
       setDarkMode(savedMode);
       applyDarkMode(savedMode);
+    }
+    
+    // Check notification permission status
+    if ('Notification' in window) {
+      setNotificationsEnabled(Notification.permission === 'granted');
     }
   }, []);
 
@@ -40,6 +46,11 @@ export default function SettingsPage() {
   };
 
   const toggleDarkMode = () => {
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+    
     let newMode: 'light' | 'dark' | 'auto';
     
     if (darkMode === 'auto') {
@@ -72,17 +83,68 @@ export default function SettingsPage() {
       setNotificationsEnabled(permission === 'granted');
       
       if (permission === 'granted') {
+        // Haptic feedback
+        if ('vibrate' in navigator) {
+          navigator.vibrate(10);
+        }
+        
         // Show a test notification
-        new Notification('HabitFlow Benachrichtigungen', {
-          body: 'Benachrichtigungen sind jetzt aktiviert! 🎉',
+        new Notification('HabitFlow', {
+          body: 'Benachrichtigungen sind jetzt aktiv! 🔔',
           icon: '/icons/icon-192x192.png',
         });
       }
     }
   };
 
+  const resetAllStreaks = () => {
+    try {
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate([10, 50, 10]);
+      }
+      
+      // Reset all supplement streaks to 0
+      const savedSupplements = localStorage.getItem('supplements');
+      if (savedSupplements) {
+        const supplements = JSON.parse(savedSupplements);
+        const resetSupplements = supplements.map((supplement: any) => ({
+          ...supplement,
+          streak: 0,
+          takenToday: false,
+        }));
+        localStorage.setItem('supplements', JSON.stringify(resetSupplements));
+      }
+      
+      // Reset habits completion
+      const savedHabits = localStorage.getItem('habits');
+      if (savedHabits) {
+        const habits = JSON.parse(savedHabits);
+        const resetHabits = habits.map((habit: any) => ({
+          ...habit,
+          completedToday: false,
+        }));
+        localStorage.setItem('habits', JSON.stringify(resetHabits));
+      }
+      
+      setAlertMessage('Alle Streaks wurden erfolgreich zurückgesetzt!');
+      setShowSuccessAlert(true);
+      setShowResetStreaksAlert(false);
+    } catch (error) {
+      console.error('Reset failed:', error);
+      setAlertMessage('Fehler beim Zurücksetzen der Streaks');
+      setShowErrorAlert(true);
+      setShowResetStreaksAlert(false);
+    }
+  };
+
   const exportData = () => {
     try {
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+      
       // Gather all data from localStorage
       const habits = localStorage.getItem('habits');
       const supplements = localStorage.getItem('supplements');
@@ -162,6 +224,13 @@ export default function SettingsPage() {
           description: 'Lade deine Gewohnheiten als JSON herunter',
           type: 'action',
           onChange: exportData,
+        },
+        {
+          icon: Flame,
+          label: 'Alle Streaks zurücksetzen',
+          description: 'Setze alle Streak-Zähler auf 0',
+          type: 'action',
+          onChange: () => setShowResetStreaksAlert(true),
         },
       ],
     },
@@ -311,6 +380,18 @@ export default function SettingsPage() {
         confirmText="OK"
         variant="destructive"
         onConfirm={() => setShowErrorAlert(false)}
+      />
+
+      {/* Reset Streaks Confirmation */}
+      <CustomAlert
+        isOpen={showResetStreaksAlert}
+        title="Alle Streaks zurücksetzen"
+        message="Möchten Sie wirklich alle Streak-Zähler unwiderruflich auf 0 setzen?"
+        confirmText="Zurücksetzen"
+        cancelText="Abbrechen"
+        variant="destructive"
+        onConfirm={resetAllStreaks}
+        onCancel={() => setShowResetStreaksAlert(false)}
       />
     </div>
   );

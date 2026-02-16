@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Habit } from '@/types';
@@ -24,8 +24,19 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
   const [reminderTime, setReminderTime] = useState('');
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]); // Mon-Fri
 
+  useEffect(() => {
+    if (isOpen && 'vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+  }, [isOpen]);
+
   const handleSubmit = () => {
     if (!name.trim()) return;
+
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
 
     onAdd({
       name: name.trim(),
