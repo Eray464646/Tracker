@@ -85,8 +85,8 @@ export default function DashboardPage() {
     setWaterIntake(newAmount);
     localStorage.setItem('water-intake', newAmount.toString());
     
-    // Celebrate if target reached
-    if (newAmount === WATER_TARGET) {
+    // Celebrate if target just reached (not if already at target)
+    if (newAmount === WATER_TARGET && waterIntake < WATER_TARGET) {
       confetti({
         particleCount: 50,
         spread: 60,
