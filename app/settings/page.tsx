@@ -185,12 +185,12 @@ export default function SettingsPage() {
                     {item.type === 'toggle' ? (
                       <div
                         className={`w-12 h-7 rounded-full transition-colors ${
-                          item.value ? 'bg-success-500' : 'bg-gray-300 dark:bg-gray-700'
+                          ('value' in item && item.value) ? 'bg-success-500' : 'bg-gray-300 dark:bg-gray-700'
                         }`}
                       >
                         <div
                           className={`w-6 h-6 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ${
-                            item.value ? 'translate-x-6' : 'translate-x-0.5'
+                            ('value' in item && item.value) ? 'translate-x-6' : 'translate-x-0.5'
                           }`}
                         />
                       </div>
