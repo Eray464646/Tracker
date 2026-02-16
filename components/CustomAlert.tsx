@@ -56,7 +56,7 @@ export default function CustomAlert({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={handleCancel || handleConfirm}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
         >
           {/* Alert Dialog */}
           <motion.div
@@ -65,7 +65,7 @@ export default function CustomAlert({
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[calc(100%-32px)] max-w-[270px] overflow-hidden"
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[calc(100%-32px)] max-w-[270px] overflow-hidden"
           >
               {/* Content */}
               <div className="px-4 pt-5 pb-4 text-center">

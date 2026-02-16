@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Droplet, Flame, Pill } from 'lucide-react';
+import { Plus, Droplet, Flame, Pill, X, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import type { Habit, Supplement, Task } from '@/types';
@@ -14,9 +14,15 @@ import SwipeableCard from '@/components/SwipeableCard';
 import CustomAlert from '@/components/CustomAlert';
 
 export default function DashboardPage() {
+  const DEFAULT_WATER_TARGET = 2500; // ml
+  const DEFAULT_WATER_SIZES = [200, 250, 1000]; // ml
+  
   const [currentDate, setCurrentDate] = useState(new Date());
   const [waterIntake, setWaterIntake] = useState(0);
   const [selectedWaterSize, setSelectedWaterSize] = useState(250); // Default 250ml
+  const [waterTarget, setWaterTarget] = useState(DEFAULT_WATER_TARGET);
+  const [waterSizes, setWaterSizes] = useState<number[]>(DEFAULT_WATER_SIZES);
+  const [customWaterSize, setCustomWaterSize] = useState('');
   const [habits, setHabits] = useState<Habit[]>([]);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -29,10 +35,8 @@ export default function DashboardPage() {
   const [undoTimer, setUndoTimer] = useState<number | null>(null);
   const [lastTakenSupplement, setLastTakenSupplement] = useState<string | null>(null);
   const [habitToDelete, setHabitToDelete] = useState<Habit | null>(null);
+  const [showWaterSettings, setShowWaterSettings] = useState(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
-  
-  const WATER_TARGET = 2500; // ml
-  const WATER_SIZES = [200, 250, 300, 500, 750]; // ml options
 
   useEffect(() => {
     // Check if it's a new day and reset completion status
@@ -79,6 +83,8 @@ export default function DashboardPage() {
     // Load data from localStorage
     const savedWater = localStorage.getItem('water-intake');
     const savedWaterSize = localStorage.getItem('water-size');
+    const savedWaterTarget = localStorage.getItem('water-target');
+    const savedWaterSizes = localStorage.getItem('water-sizes');
     const savedHabits = localStorage.getItem('habits');
     const savedSupplements = localStorage.getItem('supplements');
     
@@ -88,6 +94,14 @@ export default function DashboardPage() {
     
     if (savedWaterSize) {
       setSelectedWaterSize(parseInt(savedWaterSize));
+    }
+    
+    if (savedWaterTarget) {
+      setWaterTarget(parseInt(savedWaterTarget));
+    }
+    
+    if (savedWaterSizes) {
+      setWaterSizes(JSON.parse(savedWaterSizes));
     }
     
     if (savedHabits) {
@@ -183,7 +197,8 @@ export default function DashboardPage() {
       navigator.vibrate(10);
     }
     
-    const newAmount = Math.min(waterIntake + selectedWaterSize, WATER_TARGET);
+    // Allow unlimited tracking - remove the cap
+    const newAmount = waterIntake + selectedWaterSize;
     setWaterIntake(newAmount);
     localStorage.setItem('water-intake', newAmount.toString());
     localStorage.setItem('last-water-time', new Date().toISOString());
@@ -196,8 +211,8 @@ export default function DashboardPage() {
       });
     }
     
-    // Celebrate if target just reached (not if already at target)
-    if (newAmount === WATER_TARGET && waterIntake < WATER_TARGET) {
+    // Celebrate if target just reached (not if already at or past target)
+    if (newAmount >= waterTarget && waterIntake < waterTarget) {
       confetti({
         particleCount: 50,
         spread: 60,
@@ -209,6 +224,31 @@ export default function DashboardPage() {
   const changeWaterSize = (size: number) => {
     setSelectedWaterSize(size);
     localStorage.setItem('water-size', size.toString());
+  };
+
+  const updateWaterTarget = (newTarget: number) => {
+    setWaterTarget(newTarget);
+    localStorage.setItem('water-target', newTarget.toString());
+  };
+
+  const addCustomWaterSize = (size: number) => {
+    if (size > 0 && !waterSizes.includes(size)) {
+      const newSizes = [...waterSizes, size].sort((a, b) => a - b);
+      setWaterSizes(newSizes);
+      localStorage.setItem('water-sizes', JSON.stringify(newSizes));
+    }
+  };
+
+  const removeWaterSize = (size: number) => {
+    if (waterSizes.length > 1) {
+      const newSizes = waterSizes.filter(s => s !== size);
+      setWaterSizes(newSizes);
+      localStorage.setItem('water-sizes', JSON.stringify(newSizes));
+      if (selectedWaterSize === size) {
+        setSelectedWaterSize(newSizes[0]);
+        localStorage.setItem('water-size', newSizes[0].toString());
+      }
+    }
   };
 
   const toggleHabit = (id: string) => {
@@ -444,7 +484,7 @@ export default function DashboardPage() {
   const completedHabits = habits.filter((h) => h.completedToday).length;
   const totalHabits = habits.length;
   const habitProgress = totalHabits > 0 ? (completedHabits / totalHabits) * 100 : 0;
-  const waterProgress = (waterIntake / WATER_TARGET) * 100;
+  const waterProgress = Math.min((waterIntake / waterTarget) * 100, 100); // Cap at 100% for ring display
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('de-DE', {
@@ -514,7 +554,7 @@ export default function DashboardPage() {
                   transition={{ duration: 1, ease: "easeOut" }}
                 />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-2xl font-bold text-gray-900 dark:text-white">
                   {completedHabits}/{totalHabits}
                 </span>
@@ -551,10 +591,15 @@ export default function DashboardPage() {
                   transition={{ duration: 1, ease: "easeOut" }}
                 />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {Math.round(waterProgress)}%
-                </span>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <span className="text-xl font-bold text-gray-900 dark:text-white block">
+                    {waterIntake}
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    / {waterTarget}ml
+                  </span>
+                </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Wasser</p>
             </div>
@@ -574,16 +619,19 @@ export default function DashboardPage() {
               <Droplet className="w-5 h-5 text-primary-500" />
               <h2 className="text-lg font-semibold dark:text-white">Wasser-Tracker</h2>
             </div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {waterIntake}ml / {WATER_TARGET}ml
-            </span>
+            <button
+              onClick={() => setShowWaterSettings(true)}
+              className="text-xs text-primary-500 dark:text-primary-400 font-medium ios-button"
+            >
+              Einstellungen
+            </button>
           </div>
 
           {/* Water Size Selection */}
           <div className="mb-3">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Glasgröße wählen:</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {WATER_SIZES.map((size) => (
+              {waterSizes.map((size) => (
                 <button
                   key={size}
                   onClick={() => changeWaterSize(size)}
@@ -603,10 +651,7 @@ export default function DashboardPage() {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={addWater}
-              disabled={waterIntake >= WATER_TARGET}
-              className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg ${
-                waterIntake >= WATER_TARGET ? 'bg-gray-300 dark:bg-gray-700' : 'bg-primary-500'
-              }`}
+              className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg bg-primary-500"
             >
               <Plus className="w-8 h-8" />
             </motion.button>
@@ -623,13 +668,13 @@ export default function DashboardPage() {
             </div>
           </div>
           
-          {waterIntake >= WATER_TARGET && (
+          {waterIntake >= waterTarget && (
             <motion.p
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className="text-sm text-success-500 font-medium mt-3"
             >
-              🎉 Tägliches Ziel erreicht!
+              🎉 Tägliches Ziel {waterIntake > waterTarget ? 'übertroffen' : 'erreicht'}! ({waterIntake}ml / {waterTarget}ml)
             </motion.p>
           )}
         </motion.div>
@@ -646,12 +691,13 @@ export default function DashboardPage() {
                 onSwipeRight={() => toggleHabit(habit.id)}
                 onSwipeLeft={() => handleHabitSwipeLeft(habit)}
                 onLongPress={() => setEditingHabit(habit)}
+                onClick={() => toggleHabit(habit.id)}
               >
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="px-4 py-3 ios-button cursor-pointer"
+                  className="px-4 py-3"
                 >
                   <div className="flex items-center gap-3">
                     <div className="text-2xl">{habit.icon}</div>
@@ -846,6 +892,121 @@ export default function DashboardPage() {
         onConfirm={() => habitToDelete && deleteHabit(habitToDelete.id)}
         onCancel={() => setHabitToDelete(null)}
       />
+
+      {/* Water Settings Modal */}
+      <AnimatePresence>
+        {showWaterSettings && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowWaterSettings(false)}
+              className="fixed inset-0 bg-black/50 z-40"
+            >
+              {/* Modal - Fixed and Centered */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-32px)] max-w-[400px] max-h-[80vh] bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Wasser-Einstellungen</h2>
+                  <button
+                    onClick={() => setShowWaterSettings(false)}
+                    className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 ios-button"
+                  >
+                    <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="px-6 py-4 max-h-[calc(80vh-140px)] overflow-y-auto">
+                  {/* Water Target */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Tägliches Ziel (ml)
+                    </label>
+                    <input
+                      type="number"
+                      value={waterTarget}
+                      onChange={(e) => updateWaterTarget(Math.max(100, parseInt(e.target.value) || DEFAULT_WATER_TARGET))}
+                      min="100"
+                      step="100"
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Empfohlen: 2000-3000ml pro Tag
+                    </p>
+                  </div>
+
+                  {/* Glass Sizes */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Glasgrößen
+                    </label>
+                    <div className="space-y-2 mb-3">
+                      {waterSizes.map((size) => (
+                        <div key={size} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                          <span className="text-gray-900 dark:text-white font-medium">{size}ml</span>
+                          {waterSizes.length > 1 && (
+                            <button
+                              onClick={() => removeWaterSize(size)}
+                              className="text-red-500 text-sm font-medium ios-button"
+                            >
+                              Entfernen
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Add Custom Size */}
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={customWaterSize}
+                        onChange={(e) => setCustomWaterSize(e.target.value)}
+                        placeholder="z.B. 500"
+                        min="1"
+                        step="50"
+                        className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500"
+                      />
+                      <button
+                        onClick={() => {
+                          const size = parseInt(customWaterSize);
+                          if (size > 0) {
+                            addCustomWaterSize(size);
+                            setCustomWaterSize('');
+                          }
+                        }}
+                        className="px-4 py-2 bg-primary-500 text-white rounded-xl font-medium ios-button"
+                      >
+                        Hinzufügen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+                  <button
+                    onClick={() => setShowWaterSettings(false)}
+                    className="w-full py-3 bg-primary-500 text-white rounded-xl font-semibold ios-button"
+                  >
+                    Fertig
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
