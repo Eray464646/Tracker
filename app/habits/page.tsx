@@ -153,7 +153,10 @@ export default function HabitsPage() {
                     </div>
                   </div>
                   <motion.div
-                    onTap={() => toggleHabit(habit.id)}
+                    onTap={(e) => {
+                      e.stopPropagation();
+                      toggleHabit(habit.id);
+                    }}
                     whileTap={{ scale: 0.9 }}
                     className={`w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer ${
                       habit.completedToday
