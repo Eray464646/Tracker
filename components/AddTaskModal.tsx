@@ -55,18 +55,15 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }: AddTaskModalPro
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          />
-
-          {/* Modal - Centered on screen */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
-            className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
           >
-            <div className="w-[90%] max-w-[400px] mx-auto max-h-[85vh] bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl pointer-events-auto"
+            {/* Modal - Centered on screen */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-[90%] max-w-[400px] mx-auto max-h-[85vh] bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl"
             >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
@@ -146,7 +143,7 @@ export default function AddTaskModal({ isOpen, onClose, onAdd }: AddTaskModalPro
                 Aufgabe hinzufügen
               </button>
             </div>
-            </div>
+            </motion.div>
           </motion.div>
         </>
       )}
