@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Trash2, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Habit } from '@/types';
@@ -27,20 +27,22 @@ export default function EditHabitModal({
   onDelete,
 }: EditHabitModalProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(habit?.name || '');
-  const [icon, setIcon] = useState(habit?.icon || '✨');
-  const [rhythm, setRhythm] = useState<'daily' | 'weekly'>(habit?.rhythm || 'daily');
-  const [reminderTime, setReminderTime] = useState(habit?.reminderTime || '');
-  const [selectedDays, setSelectedDays] = useState<number[]>(habit?.weekDays || [1, 2, 3, 4, 5]);
+  const [name, setName] = useState('');
+  const [icon, setIcon] = useState('✨');
+  const [rhythm, setRhythm] = useState<'daily' | 'weekly'>('daily');
+  const [reminderTime, setReminderTime] = useState('');
+  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
 
   // Update state when habit changes
-  if (habit && (name !== habit.name || icon !== habit.icon)) {
-    setName(habit.name);
-    setIcon(habit.icon);
-    setRhythm(habit.rhythm);
-    setReminderTime(habit.reminderTime || '');
-    setSelectedDays(habit.weekDays || [1, 2, 3, 4, 5]);
-  }
+  useEffect(() => {
+    if (habit) {
+      setName(habit.name);
+      setIcon(habit.icon);
+      setRhythm(habit.rhythm);
+      setReminderTime(habit.reminderTime || '');
+      setSelectedDays(habit.weekDays || [1, 2, 3, 4, 5]);
+    }
+  }, [habit]);
 
   const handleUpdate = () => {
     if (!habit || !name.trim()) return;
@@ -60,7 +62,9 @@ export default function EditHabitModal({
   const handleDelete = () => {
     if (!habit) return;
     
-    if (confirm(`Möchten Sie "${habit.name}" wirklich löschen?`)) {
+    // TODO: Replace confirm() with custom iOS-style confirmation modal
+    const confirmed = confirm(`Möchten Sie "${habit.name}" wirklich löschen?`);
+    if (confirmed) {
       onDelete(habit.id);
       onClose();
     }

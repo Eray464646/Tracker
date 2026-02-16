@@ -53,9 +53,11 @@ export default function SettingsPage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
+      // TODO: Replace alert with toast notification for better UX
       alert('✅ Daten erfolgreich exportiert!');
     } catch (error) {
       console.error('Export failed:', error);
+      // TODO: Replace alert with toast notification for better UX
       alert('❌ Fehler beim Exportieren der Daten');
     }
   };

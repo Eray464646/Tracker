@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Plus, Droplet, Flame, Pill } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import type { Habit, Supplement } from '@/types';
+import type { Habit, Supplement, Task } from '@/types';
 import AddHabitModal from '@/components/AddHabitModal';
 import AddTaskModal from '@/components/AddTaskModal';
 import EditHabitModal from '@/components/EditHabitModal';
@@ -127,7 +127,7 @@ export default function DashboardPage() {
     localStorage.setItem('habits', JSON.stringify(updatedHabits));
   };
 
-  const addTask = (taskData: any) => {
+  const addTask = (taskData: Omit<Task, 'id' | 'completed' | 'createdAt'>) => {
     // For now, just close the modal
     // In a real implementation, you would add the task to state
     console.log('Task added:', taskData);
