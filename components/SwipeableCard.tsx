@@ -122,7 +122,8 @@ export default function SwipeableCard({
         ref={cardRef}
         drag={!disabled ? 'x' : false}
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.2}
+        dragElastic={0.5}
+        dragMomentum={false}
         onDragStart={handleDragStart}
         onDrag={handleDrag}
         onDragEnd={handleDragEnd}
