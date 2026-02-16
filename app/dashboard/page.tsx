@@ -4,21 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Plus, Droplet, Flame, Pill } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-
-interface Habit {
-  id: string;
-  name: string;
-  icon: string;
-  completedToday: boolean;
-}
-
-interface Supplement {
-  id: string;
-  name: string;
-  icon: string;
-  streak: number;
-  takenToday: boolean;
-}
+import type { Habit, Supplement } from '@/types';
+import AddHabitModal from '@/components/AddHabitModal';
+import AddTaskModal from '@/components/AddTaskModal';
+import EditHabitModal from '@/components/EditHabitModal';
 
 export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -26,6 +15,10 @@ export default function DashboardPage() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showAddHabitModal, setShowAddHabitModal] = useState(false);
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
   
   const WATER_TARGET = 2500; // ml
@@ -34,7 +27,7 @@ export default function DashboardPage() {
   useEffect(() => {
     // Load data from localStorage
     const savedWater = localStorage.getItem('water-intake');
-    const savedHabits = localStorage.getItem('habits-today');
+    const savedHabits = localStorage.getItem('habits');
     const savedSupplements = localStorage.getItem('supplements');
     
     if (savedWater) {
@@ -44,15 +37,15 @@ export default function DashboardPage() {
     if (savedHabits) {
       setHabits(JSON.parse(savedHabits));
     } else {
-      // Default habits
+      // Default habits with new structure
       const defaultHabits: Habit[] = [
-        { id: '1', name: 'Morgenmeditation', icon: '🧘', completedToday: false },
-        { id: '2', name: '30 Minuten lesen', icon: '📚', completedToday: false },
-        { id: '3', name: 'Training', icon: '💪', completedToday: false },
-        { id: '4', name: 'Gesund essen', icon: '🥗', completedToday: false },
+        { id: '1', name: 'Morgenmeditation', icon: '🧘', completedToday: false, rhythm: 'daily', createdAt: new Date().toISOString() },
+        { id: '2', name: '30 Minuten lesen', icon: '📚', completedToday: false, rhythm: 'daily', createdAt: new Date().toISOString() },
+        { id: '3', name: 'Training', icon: '💪', completedToday: false, rhythm: 'daily', createdAt: new Date().toISOString() },
+        { id: '4', name: 'Gesund essen', icon: '🥗', completedToday: false, rhythm: 'daily', createdAt: new Date().toISOString() },
       ];
       setHabits(defaultHabits);
-      localStorage.setItem('habits-today', JSON.stringify(defaultHabits));
+      localStorage.setItem('habits', JSON.stringify(defaultHabits));
     }
     
     if (savedSupplements) {
@@ -100,7 +93,81 @@ export default function DashboardPage() {
       habit.id === id ? { ...habit, completedToday: !habit.completedToday } : habit
     );
     setHabits(updatedHabits);
-    localStorage.setItem('habits-today', JSON.stringify(updatedHabits));
+    localStorage.setItem('habits', JSON.stringify(updatedHabits));
+  };
+
+  const addHabit = (habitData: Omit<Habit, 'id' | 'completedToday' | 'createdAt'>) => {
+    const newHabit: Habit = {
+      ...habitData,
+      id: Date.now().toString(),
+      completedToday: false,
+      createdAt: new Date().toISOString(),
+    };
+    const updatedHabits = [...habits, newHabit];
+    setHabits(updatedHabits);
+    localStorage.setItem('habits', JSON.stringify(updatedHabits));
+
+    // Schedule notification if reminder time is set
+    if (newHabit.reminderTime && 'Notification' in window && Notification.permission === 'granted') {
+      scheduleNotification(newHabit);
+    }
+  };
+
+  const updateHabit = (id: string, updates: Partial<Habit>) => {
+    const updatedHabits = habits.map((habit) =>
+      habit.id === id ? { ...habit, ...updates } : habit
+    );
+    setHabits(updatedHabits);
+    localStorage.setItem('habits', JSON.stringify(updatedHabits));
+  };
+
+  const deleteHabit = (id: string) => {
+    const updatedHabits = habits.filter((habit) => habit.id !== id);
+    setHabits(updatedHabits);
+    localStorage.setItem('habits', JSON.stringify(updatedHabits));
+  };
+
+  const addTask = (taskData: any) => {
+    // For now, just close the modal
+    // In a real implementation, you would add the task to state
+    console.log('Task added:', taskData);
+  };
+
+  const scheduleNotification = (habit: Habit) => {
+    if (!habit.reminderTime) return;
+
+    const [hours, minutes] = habit.reminderTime.split(':').map(Number);
+    const now = new Date();
+    const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+
+    if (scheduledTime > now) {
+      const delay = scheduledTime.getTime() - now.getTime();
+      setTimeout(() => {
+        new Notification('HabitFlow Erinnerung', {
+          body: `Zeit für: ${habit.name} ${habit.icon}`,
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/icon-192x192.png',
+        });
+      }, delay);
+    }
+  };
+
+  const handleLongPressStart = (habit: Habit) => {
+    const timer = setTimeout(() => {
+      setEditingHabit(habit);
+      // Vibrate if available (haptic feedback simulation)
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+    }, 500); // 500ms for long press
+    setLongPressTimer(timer);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
   };
 
   const takeSupplement = (id: string) => {
@@ -138,18 +205,18 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-full bg-gray-50 max-w-[430px] mx-auto">
+    <div className="min-h-full bg-gray-50 dark:bg-black max-w-[430px] mx-auto">
       {/* Sticky Header */}
-      <div className={`sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b transition-all duration-300 safe-area-top ${
-        isScrolled ? 'border-gray-200 py-2' : 'border-transparent py-6'
+      <div className={`sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b transition-all duration-300 safe-area-top ${
+        isScrolled ? 'border-gray-200 dark:border-gray-800 py-2' : 'border-transparent py-6'
       }`}>
         <div className="px-6">
-          <p className={`text-sm text-gray-500 font-medium transition-all duration-300 ${
+          <p className={`text-sm text-gray-500 dark:text-gray-400 font-medium transition-all duration-300 ${
             isScrolled ? 'text-xs' : ''
           }`}>
             {formatDate(currentDate)}
           </p>
-          <h1 className={`font-bold tracking-tight transition-all duration-300 ${
+          <h1 className={`font-bold tracking-tight dark:text-white transition-all duration-300 ${
             isScrolled ? 'text-2xl' : 'text-4xl mt-1'
           }`}>
             Heute
@@ -163,9 +230,9 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           whileTap={{ scale: 0.98 }}
-          className="ios-card p-6"
+          className="ios-card dark:bg-[#1C1C1E] p-6"
         >
-          <h2 className="text-lg font-semibold mb-4">Fortschritt</h2>
+          <h2 className="text-lg font-semibold mb-4 dark:text-white">Fortschritt</h2>
           <div className="flex items-center justify-center gap-8">
             {/* Habits Ring (Green) */}
             <div className="relative flex flex-col items-center">
@@ -175,7 +242,8 @@ export default function DashboardPage() {
                   cx="60"
                   cy="60"
                   r="50"
-                  stroke="#E5E5EA"
+                  stroke="#3A3A3C"
+                  className="dark:stroke-[#3A3A3C] stroke-[#E5E5EA]"
                   strokeWidth="12"
                   fill="none"
                 />
@@ -197,11 +265,11 @@ export default function DashboardPage() {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">
                   {completedHabits}/{totalHabits}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-2">Gewohnheiten</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Gewohnheiten</p>
             </div>
 
             {/* Water Ring (Blue) */}
@@ -212,7 +280,7 @@ export default function DashboardPage() {
                   cx="60"
                   cy="60"
                   r="50"
-                  stroke="#E5E5EA"
+                  className="dark:stroke-[#3A3A3C] stroke-[#E5E5EA]"
                   strokeWidth="12"
                   fill="none"
                 />
@@ -234,11 +302,11 @@ export default function DashboardPage() {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">
                   {Math.round(waterProgress)}%
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-2">Wasser</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Wasser</p>
             </div>
           </div>
         </motion.div>
@@ -249,14 +317,14 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           whileTap={{ scale: 0.98 }}
-          className="ios-card p-6"
+          className="ios-card dark:bg-[#1C1C1E] p-6"
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Droplet className="w-5 h-5 text-primary-500" />
-              <h2 className="text-lg font-semibold">Wasser-Tracker</h2>
+              <h2 className="text-lg font-semibold dark:text-white">Wasser-Tracker</h2>
             </div>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               {waterIntake}ml / {WATER_TARGET}ml
             </span>
           </div>
@@ -267,14 +335,14 @@ export default function DashboardPage() {
               onClick={addWater}
               disabled={waterIntake >= WATER_TARGET}
               className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg ${
-                waterIntake >= WATER_TARGET ? 'bg-gray-300' : 'bg-primary-500'
+                waterIntake >= WATER_TARGET ? 'bg-gray-300 dark:bg-gray-700' : 'bg-primary-500'
               }`}
             >
               <Plus className="w-8 h-8" />
             </motion.button>
             <div className="flex-1">
-              <p className="text-sm text-gray-600 mb-1">+{WATER_INCREMENT}ml pro Klick</p>
-              <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">+{WATER_INCREMENT}ml pro Klick</p>
+              <div className="w-full h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-primary-500 rounded-full"
                   initial={{ width: 0 }}
@@ -297,11 +365,11 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Habits Section */}
-        <div className="ios-card overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <h2 className="text-lg font-semibold">Gewohnheiten</h2>
+        <div className="ios-card dark:bg-[#1C1C1E] overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-lg font-semibold dark:text-white">Gewohnheiten</h2>
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {habits.map((habit, index) => (
               <motion.div
                 key={habit.id}
@@ -310,7 +378,16 @@ export default function DashboardPage() {
                 transition={{ delay: index * 0.05 }}
                 whileTap={{ scale: 0.98 }}
                 className="px-4 py-3 ios-button cursor-pointer"
-                onClick={() => toggleHabit(habit.id)}
+                onClick={() => {
+                  if (!longPressTimer) {
+                    toggleHabit(habit.id);
+                  }
+                }}
+                onMouseDown={() => handleLongPressStart(habit)}
+                onMouseUp={handleLongPressEnd}
+                onMouseLeave={handleLongPressEnd}
+                onTouchStart={() => handleLongPressStart(habit)}
+                onTouchEnd={handleLongPressEnd}
               >
                 <div className="flex items-center gap-3">
                   <div className="text-2xl">{habit.icon}</div>
@@ -318,8 +395,8 @@ export default function DashboardPage() {
                     <p
                       className={`font-medium ${
                         habit.completedToday
-                          ? 'line-through text-gray-400'
-                          : 'text-gray-900'
+                          ? 'line-through text-gray-400 dark:text-gray-500'
+                          : 'text-gray-900 dark:text-white'
                       }`}
                     >
                       {habit.name}
@@ -329,7 +406,7 @@ export default function DashboardPage() {
                     className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
                       habit.completedToday
                         ? 'bg-success-500 border-success-500'
-                        : 'border-gray-300'
+                        : 'border-gray-300 dark:border-gray-600'
                     }`}
                   >
                     {habit.completedToday && (
@@ -355,12 +432,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Supplements Section */}
-        <div className="ios-card overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+        <div className="ios-card dark:bg-[#1C1C1E] overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
             <Pill className="w-5 h-5 text-purple-500" />
-            <h2 className="text-lg font-semibold">Nahrungsergänzung</h2>
+            <h2 className="text-lg font-semibold dark:text-white">Nahrungsergänzung</h2>
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {supplements.map((supplement, index) => (
               <motion.div
                 key={supplement.id}
@@ -372,7 +449,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-3">
                   <div className="text-2xl">{supplement.icon}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900">{supplement.name}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{supplement.name}</p>
                     <div className="flex items-center gap-1 mt-1">
                       <Flame className="w-3 h-3 text-orange-500" />
                       <span className="text-xs text-orange-500">{supplement.streak} Tage</span>
@@ -384,7 +461,7 @@ export default function DashboardPage() {
                     disabled={supplement.takenToday}
                     className={`px-4 py-2 rounded-full text-sm font-semibold ${
                       supplement.takenToday
-                        ? 'bg-gray-100 text-gray-400'
+                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
                         : 'bg-purple-500 text-white'
                     }`}
                   >
@@ -402,21 +479,46 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           whileTap={{ scale: 0.98 }}
-          className="ios-card p-4"
+          className="ios-card dark:bg-[#1C1C1E] p-4"
         >
-          <h2 className="text-lg font-semibold mb-3">Schnellaktionen</h2>
+          <h2 className="text-lg font-semibold mb-3 dark:text-white">Schnellaktionen</h2>
           <div className="grid grid-cols-2 gap-3">
-            <button className="ios-button flex items-center gap-2 bg-primary-50 text-primary-600 px-4 py-3 rounded-xl font-medium">
+            <button 
+              onClick={() => setShowAddHabitModal(true)}
+              className="ios-button flex items-center gap-2 bg-primary-50 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 px-4 py-3 rounded-xl font-medium"
+            >
               <Plus className="w-5 h-5" />
               Gewohnheit
             </button>
-            <button className="ios-button flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-3 rounded-xl font-medium">
+            <button 
+              onClick={() => setShowAddTaskModal(true)}
+              className="ios-button flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-3 rounded-xl font-medium"
+            >
               <Plus className="w-5 h-5" />
               Aufgabe
             </button>
           </div>
         </motion.div>
       </div>
+
+      {/* Modals */}
+      <AddHabitModal
+        isOpen={showAddHabitModal}
+        onClose={() => setShowAddHabitModal(false)}
+        onAdd={addHabit}
+      />
+      <AddTaskModal
+        isOpen={showAddTaskModal}
+        onClose={() => setShowAddTaskModal(false)}
+        onAdd={addTask}
+      />
+      <EditHabitModal
+        isOpen={!!editingHabit}
+        onClose={() => setEditingHabit(null)}
+        habit={editingHabit}
+        onUpdate={updateHabit}
+        onDelete={deleteHabit}
+      />
     </div>
   );
 }
