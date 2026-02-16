@@ -153,7 +153,7 @@ export default function HabitsPage() {
                     </div>
                   </div>
                   <motion.div
-                    onTap={(e) => {
+                    onPointerDown={(e) => {
                       e.stopPropagation();
                       toggleHabit(habit.id);
                     }}
