@@ -135,7 +135,7 @@ export default function HabitsPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="ios-card dark:bg-[#1C1C1E] p-4 cursor-pointer"
+                className="ios-card dark:bg-[#1C1C1E] p-4"
               >
                 <div className="flex items-center gap-4">
                   <div className="text-2xl">

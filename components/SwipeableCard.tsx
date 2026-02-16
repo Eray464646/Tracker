@@ -64,8 +64,8 @@ export default function SwipeableCard({
         navigator.vibrate(10);
       }
       onSwipeLeft();
-    } else if (Math.abs(info.offset.x) < 5 && Math.abs(info.offset.y) < 5 && onClick) {
-      // Click detected - no significant drag movement
+    } else if (Math.abs(info.offset.x) < 10 && Math.abs(info.offset.y) < 10 && onClick) {
+      // Click detected - no significant drag movement (increased threshold to 10px)
       onClick();
     }
 

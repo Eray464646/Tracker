@@ -693,7 +693,7 @@ export default function DashboardPage() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="px-4 py-3 ios-button cursor-pointer"
+                  className="px-4 py-3"
                 >
                   <div className="flex items-center gap-3">
                     <div className="text-2xl">{habit.icon}</div>
