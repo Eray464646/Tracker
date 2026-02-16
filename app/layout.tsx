@@ -44,7 +44,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className="antialiased">
-        <div className="flex flex-col h-full max-w-[430px] w-full mx-auto bg-gray-50">
+        <div className="flex flex-col h-full max-w-[430px] w-full mx-auto bg-gray-50 dark:bg-black">
           <main className="flex-1 overflow-y-auto pb-20">
             {children}
           </main>
