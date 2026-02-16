@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface CustomAlertProps {
@@ -23,11 +24,25 @@ export default function CustomAlert({
   onCancel,
   variant = 'default',
 }: CustomAlertProps) {
+  useEffect(() => {
+    if (isOpen && 'vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+  }, [isOpen]);
+
   const handleConfirm = () => {
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
     onConfirm();
   };
 
   const handleCancel = () => {
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
     if (onCancel) {
       onCancel();
     }

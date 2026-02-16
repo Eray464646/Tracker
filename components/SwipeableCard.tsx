@@ -44,13 +44,21 @@ export default function SwipeableCard({
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setIsDragging(false);
-    const swipeThreshold = 45;
+    const swipeThreshold = window.innerWidth * 0.15; // 15% of screen width
 
     if (info.offset.x > swipeThreshold && onSwipeRight) {
       // Swipe right - complete
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
       onSwipeRight();
     } else if (info.offset.x < -swipeThreshold && onSwipeLeft) {
       // Swipe left - delete
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
       onSwipeLeft();
     }
 

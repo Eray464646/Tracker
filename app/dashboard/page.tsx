@@ -35,6 +35,47 @@ export default function DashboardPage() {
   const WATER_SIZES = [200, 250, 300, 500, 750]; // ml options
 
   useEffect(() => {
+    // Check if it's a new day and reset completion status
+    const checkAndResetDaily = () => {
+      const today = new Date().toDateString();
+      const lastOpenedDate = localStorage.getItem('lastOpenedDate');
+      
+      if (lastOpenedDate !== today) {
+        // It's a new day, reset all completion statuses
+        const savedHabits = localStorage.getItem('habits');
+        const savedSupplements = localStorage.getItem('supplements');
+        
+        if (savedHabits) {
+          const habits = JSON.parse(savedHabits);
+          const resetHabits = habits.map((habit: Habit) => ({
+            ...habit,
+            completedToday: false,
+          }));
+          localStorage.setItem('habits', JSON.stringify(resetHabits));
+          setHabits(resetHabits);
+        }
+        
+        if (savedSupplements) {
+          const supplements = JSON.parse(savedSupplements);
+          const resetSupplements = supplements.map((supplement: Supplement) => ({
+            ...supplement,
+            takenToday: false,
+          }));
+          localStorage.setItem('supplements', JSON.stringify(resetSupplements));
+          setSupplements(resetSupplements);
+        }
+        
+        // Reset water intake
+        setWaterIntake(0);
+        localStorage.setItem('water-intake', '0');
+        
+        // Update last opened date
+        localStorage.setItem('lastOpenedDate', today);
+      }
+    };
+    
+    checkAndResetDaily();
+    
     // Load data from localStorage
     const savedWater = localStorage.getItem('water-intake');
     const savedWaterSize = localStorage.getItem('water-size');
@@ -52,7 +93,7 @@ export default function DashboardPage() {
     if (savedHabits) {
       setHabits(JSON.parse(savedHabits));
     } else {
-      // Default habits with new structure
+      // Default habits with new structure - all start with 0 streak
       const defaultHabits: Habit[] = [
         { id: '1', name: 'Morgenmeditation', icon: '🧘', completedToday: false, rhythm: 'daily', createdAt: new Date().toISOString() },
         { id: '2', name: '30 Minuten lesen', icon: '📚', completedToday: false, rhythm: 'daily', createdAt: new Date().toISOString() },
@@ -66,7 +107,7 @@ export default function DashboardPage() {
     if (savedSupplements) {
       setSupplements(JSON.parse(savedSupplements));
     } else {
-      // Reset all streaks to 0 - no fake data
+      // No mock data - start empty
       const defaultSupplements: Supplement[] = [];
       setSupplements(defaultSupplements);
       localStorage.setItem('supplements', JSON.stringify(defaultSupplements));
@@ -91,8 +132,12 @@ export default function DashboardPage() {
           const twoHours = 2 * 60 * 60 * 1000;
           
           if (timeSinceLastWater > twoHours && 'Notification' in window && Notification.permission === 'granted') {
+            // Vibrate before showing notification
+            if ('vibrate' in navigator) {
+              navigator.vibrate([200, 100, 200]);
+            }
             new Notification('HabitFlow Wassererinnerung', {
-              body: 'Vergiss nicht, Wasser zu trinken! 💧',
+              body: 'Zeit für ein Glas Wasser! 💧',
               icon: '/icons/icon-192x192.png',
               tag: 'water-reminder',
             });
@@ -114,6 +159,11 @@ export default function DashboardPage() {
   }, []);
 
   const addWater = () => {
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+    
     const newAmount = Math.min(waterIntake + selectedWaterSize, WATER_TARGET);
     setWaterIntake(newAmount);
     localStorage.setItem('water-intake', newAmount.toString());
@@ -143,6 +193,11 @@ export default function DashboardPage() {
   };
 
   const toggleHabit = (id: string) => {
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+    
     const updatedHabits = habits.map((habit) =>
       habit.id === id ? { ...habit, completedToday: !habit.completedToday } : habit
     );
@@ -231,27 +286,43 @@ export default function DashboardPage() {
 
   const takeSupplement = (id: string) => {
     const updatedSupplements = supplements.map((supplement) => {
-      if (supplement.id === id && !supplement.takenToday) {
-        // Trigger confetti
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
+      if (supplement.id === id) {
+        // Haptic feedback
+        if ('vibrate' in navigator) {
+          navigator.vibrate(10);
+        }
         
-        // Set up undo timer (5 seconds)
-        setLastTakenSupplement(id);
-        const timer = setTimeout(() => {
-          setLastTakenSupplement(null);
-        }, 5000) as unknown as number;
-        setUndoTimer(timer);
-        
-        return {
-          ...supplement,
-          takenToday: true,
-          streak: supplement.streak + 1,
-          lastTakenAt: new Date().toISOString(),
-        };
+        // Toggle functionality
+        if (supplement.takenToday) {
+          // Untake the supplement
+          return {
+            ...supplement,
+            takenToday: false,
+            streak: Math.max(0, supplement.streak - 1),
+            lastTakenAt: undefined,
+          };
+        } else {
+          // Take the supplement
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+          
+          // Set up undo timer (5 seconds)
+          setLastTakenSupplement(id);
+          const timer = setTimeout(() => {
+            setLastTakenSupplement(null);
+          }, 5000) as unknown as number;
+          setUndoTimer(timer);
+          
+          return {
+            ...supplement,
+            takenToday: true,
+            streak: supplement.streak + 1,
+            lastTakenAt: new Date().toISOString(),
+          };
+        }
       }
       return supplement;
     });
@@ -636,7 +707,6 @@ export default function DashboardPage() {
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => takeSupplement(supplement.id)}
-                        disabled={supplement.takenToday}
                         className={`px-4 py-2 rounded-full text-sm font-semibold ${
                           supplement.takenToday
                             ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'

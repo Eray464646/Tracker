@@ -121,15 +121,22 @@ async function checkWaterReminder() {
 
     // If no clients are open, check localStorage through message
     if (allClients.length === 0) {
-      // Show notification if needed
-      await self.registration.showNotification('HabitFlow Wassererinnerung', {
-        body: 'Vergiss nicht, Wasser zu trinken! 💧',
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-72x72.png',
-        tag: 'water-reminder',
-        requireInteraction: false,
-        vibrate: [200, 100, 200],
-      });
+      // Show notification if needed (we can't access localStorage from SW without a client)
+      // So we'll just show a generic reminder
+      const now = new Date();
+      const hours = now.getHours();
+      
+      // Only send during waking hours (8 AM - 10 PM)
+      if (hours >= 8 && hours <= 22) {
+        await self.registration.showNotification('HabitFlow Wassererinnerung', {
+          body: 'Zeit für ein Glas Wasser! 💧',
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/icon-72x72.png',
+          tag: 'water-reminder',
+          requireInteraction: false,
+          vibrate: [200, 100, 200],
+        });
+      }
     } else {
       // Ask client for last water intake time
       for (const client of allClients) {
