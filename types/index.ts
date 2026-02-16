@@ -24,6 +24,10 @@ export interface Supplement {
   icon: string;
   streak: number;
   takenToday: boolean;
+  frequency?: 'daily' | 'weekly';
+  weekDays?: number[]; // 0-6, Sunday to Saturday
+  reminderTime?: string;
+  lastTakenAt?: string; // For undo functionality
 }
 
 export interface AppData {

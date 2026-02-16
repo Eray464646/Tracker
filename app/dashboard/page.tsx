@@ -8,30 +8,42 @@ import type { Habit, Supplement, Task } from '@/types';
 import AddHabitModal from '@/components/AddHabitModal';
 import AddTaskModal from '@/components/AddTaskModal';
 import EditHabitModal from '@/components/EditHabitModal';
+import AddSupplementModal from '@/components/AddSupplementModal';
+import EditSupplementModal from '@/components/EditSupplementModal';
 
 export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [waterIntake, setWaterIntake] = useState(0);
+  const [selectedWaterSize, setSelectedWaterSize] = useState(250); // Default 250ml
   const [habits, setHabits] = useState<Habit[]>([]);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showAddHabitModal, setShowAddHabitModal] = useState(false);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [showAddSupplementModal, setShowAddSupplementModal] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [editingSupplement, setEditingSupplement] = useState<Supplement | null>(null);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [undoTimer, setUndoTimer] = useState<NodeJS.Timeout | null>(null);
+  const [lastTakenSupplement, setLastTakenSupplement] = useState<string | null>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
   
   const WATER_TARGET = 2500; // ml
-  const WATER_INCREMENT = 250; // ml
+  const WATER_SIZES = [200, 250, 300, 500, 750]; // ml options
 
   useEffect(() => {
     // Load data from localStorage
     const savedWater = localStorage.getItem('water-intake');
+    const savedWaterSize = localStorage.getItem('water-size');
     const savedHabits = localStorage.getItem('habits');
     const savedSupplements = localStorage.getItem('supplements');
     
     if (savedWater) {
       setWaterIntake(parseInt(savedWater));
+    }
+    
+    if (savedWaterSize) {
+      setSelectedWaterSize(parseInt(savedWaterSize));
     }
     
     if (savedHabits) {
@@ -51,12 +63,8 @@ export default function DashboardPage() {
     if (savedSupplements) {
       setSupplements(JSON.parse(savedSupplements));
     } else {
-      // Default supplements
-      const defaultSupplements: Supplement[] = [
-        { id: '1', name: 'Magnesium', icon: '💊', streak: 7, takenToday: false },
-        { id: '2', name: 'Vitamin D', icon: '☀️', streak: 12, takenToday: false },
-        { id: '3', name: 'Omega 3', icon: '🐟', streak: 5, takenToday: false },
-      ];
+      // Reset all streaks to 0 - no fake data
+      const defaultSupplements: Supplement[] = [];
       setSupplements(defaultSupplements);
       localStorage.setItem('supplements', JSON.stringify(defaultSupplements));
     }
@@ -74,7 +82,7 @@ export default function DashboardPage() {
   }, []);
 
   const addWater = () => {
-    const newAmount = Math.min(waterIntake + WATER_INCREMENT, WATER_TARGET);
+    const newAmount = Math.min(waterIntake + selectedWaterSize, WATER_TARGET);
     setWaterIntake(newAmount);
     localStorage.setItem('water-intake', newAmount.toString());
     
@@ -86,6 +94,11 @@ export default function DashboardPage() {
         origin: { y: 0.6 }
       });
     }
+  };
+
+  const changeWaterSize = (size: number) => {
+    setSelectedWaterSize(size);
+    localStorage.setItem('water-size', size.toString());
   };
 
   const toggleHabit = (id: string) => {
@@ -179,16 +192,83 @@ export default function DashboardPage() {
           spread: 70,
           origin: { y: 0.6 }
         });
+        
+        // Set up undo timer (5 seconds)
+        setLastTakenSupplement(id);
+        const timer = setTimeout(() => {
+          setLastTakenSupplement(null);
+        }, 5000);
+        setUndoTimer(timer);
+        
         return {
           ...supplement,
           takenToday: true,
           streak: supplement.streak + 1,
+          lastTakenAt: new Date().toISOString(),
         };
       }
       return supplement;
     });
     setSupplements(updatedSupplements);
     localStorage.setItem('supplements', JSON.stringify(updatedSupplements));
+  };
+
+  const undoTakeSupplement = (id: string) => {
+    if (undoTimer) {
+      clearTimeout(undoTimer);
+      setUndoTimer(null);
+    }
+    
+    const updatedSupplements = supplements.map((supplement) => {
+      if (supplement.id === id) {
+        return {
+          ...supplement,
+          takenToday: false,
+          streak: Math.max(0, supplement.streak - 1),
+          lastTakenAt: undefined,
+        };
+      }
+      return supplement;
+    });
+    setSupplements(updatedSupplements);
+    localStorage.setItem('supplements', JSON.stringify(updatedSupplements));
+    setLastTakenSupplement(null);
+  };
+
+  const addSupplement = (supplementData: Omit<Supplement, 'id' | 'streak' | 'takenToday'>) => {
+    const newSupplement: Supplement = {
+      ...supplementData,
+      id: Date.now().toString(),
+      streak: 0,
+      takenToday: false,
+    };
+    const updatedSupplements = [...supplements, newSupplement];
+    setSupplements(updatedSupplements);
+    localStorage.setItem('supplements', JSON.stringify(updatedSupplements));
+  };
+
+  const updateSupplement = (id: string, updates: Partial<Supplement>) => {
+    const updatedSupplements = supplements.map((supplement) =>
+      supplement.id === id ? { ...supplement, ...updates } : supplement
+    );
+    setSupplements(updatedSupplements);
+    localStorage.setItem('supplements', JSON.stringify(updatedSupplements));
+  };
+
+  const deleteSupplement = (id: string) => {
+    const updatedSupplements = supplements.filter((supplement) => supplement.id !== id);
+    setSupplements(updatedSupplements);
+    localStorage.setItem('supplements', JSON.stringify(updatedSupplements));
+  };
+
+  const handleSupplementLongPress = (supplement: Supplement) => {
+    const timer = setTimeout(() => {
+      setEditingSupplement(supplement);
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+    }, 500);
+    setLongPressTimer(timer);
   };
 
   const completedHabits = habits.filter((h) => h.completedToday).length;
@@ -328,6 +408,26 @@ export default function DashboardPage() {
               {waterIntake}ml / {WATER_TARGET}ml
             </span>
           </div>
+
+          {/* Water Size Selection */}
+          <div className="mb-3">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Glasgröße wählen:</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {WATER_SIZES.map((size) => (
+                <button
+                  key={size}
+                  onClick={() => changeWaterSize(size)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap ios-button ${
+                    selectedWaterSize === size
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  {size}ml
+                </button>
+              ))}
+            </div>
+          </div>
           
           <div className="flex items-center gap-3">
             <motion.button
@@ -341,7 +441,7 @@ export default function DashboardPage() {
               <Plus className="w-8 h-8" />
             </motion.button>
             <div className="flex-1">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">+{WATER_INCREMENT}ml pro Klick</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">+{selectedWaterSize}ml pro Klick</p>
               <div className="w-full h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-primary-500 rounded-full"
@@ -433,43 +533,82 @@ export default function DashboardPage() {
 
         {/* Supplements Section */}
         <div className="ios-card dark:bg-[#1C1C1E] overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-            <Pill className="w-5 h-5 text-purple-500" />
-            <h2 className="text-lg font-semibold dark:text-white">Nahrungsergänzung</h2>
+          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Pill className="w-5 h-5 text-purple-500" />
+              <h2 className="text-lg font-semibold dark:text-white">Nahrungsergänzung</h2>
+            </div>
+            <button
+              onClick={() => setShowAddSupplementModal(true)}
+              className="p-1.5 rounded-full bg-purple-100 dark:bg-purple-500/20 ios-button"
+            >
+              <Plus className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+            </button>
           </div>
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
-            {supplements.map((supplement, index) => (
-              <motion.div
-                key={supplement.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + index * 0.05 }}
-                className="px-4 py-3"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl">{supplement.icon}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 dark:text-white">{supplement.name}</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Flame className="w-3 h-3 text-orange-500" />
-                      <span className="text-xs text-orange-500">{supplement.streak} Tage</span>
+            {supplements.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  Noch keine Supplements hinzugefügt
+                </p>
+                <button
+                  onClick={() => setShowAddSupplementModal(true)}
+                  className="mt-3 text-purple-500 dark:text-purple-400 text-sm font-medium"
+                >
+                  Erstes Supplement hinzufügen
+                </button>
+              </div>
+            ) : (
+              supplements.map((supplement, index) => (
+                <motion.div
+                  key={supplement.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + index * 0.05 }}
+                  className="px-4 py-3"
+                  onMouseDown={() => handleSupplementLongPress(supplement)}
+                  onMouseUp={handleLongPressEnd}
+                  onMouseLeave={handleLongPressEnd}
+                  onTouchStart={() => handleSupplementLongPress(supplement)}
+                  onTouchEnd={handleLongPressEnd}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">{supplement.icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 dark:text-white">{supplement.name}</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <Flame className="w-3 h-3 text-orange-500" />
+                        <span className="text-xs text-orange-500">{supplement.streak} Tage</span>
+                      </div>
                     </div>
+                    {supplement.takenToday && lastTakenSupplement === supplement.id ? (
+                      <motion.button
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => undoTakeSupplement(supplement.id)}
+                        className="px-4 py-2 rounded-full text-sm font-semibold bg-orange-500 text-white"
+                      >
+                        Rückgängig
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => takeSupplement(supplement.id)}
+                        disabled={supplement.takenToday}
+                        className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                          supplement.takenToday
+                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
+                            : 'bg-purple-500 text-white'
+                        }`}
+                      >
+                        {supplement.takenToday ? 'Erledigt ✓' : 'Eingenommen'}
+                      </motion.button>
+                    )}
                   </div>
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => takeSupplement(supplement.id)}
-                    disabled={supplement.takenToday}
-                    className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                      supplement.takenToday
-                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
-                        : 'bg-purple-500 text-white'
-                    }`}
-                  >
-                    {supplement.takenToday ? 'Erledigt ✓' : 'Eingenommen'}
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
 
@@ -518,6 +657,18 @@ export default function DashboardPage() {
         habit={editingHabit}
         onUpdate={updateHabit}
         onDelete={deleteHabit}
+      />
+      <AddSupplementModal
+        isOpen={showAddSupplementModal}
+        onClose={() => setShowAddSupplementModal(false)}
+        onAdd={addSupplement}
+      />
+      <EditSupplementModal
+        isOpen={!!editingSupplement}
+        onClose={() => setEditingSupplement(null)}
+        supplement={editingSupplement}
+        onUpdate={updateSupplement}
+        onDelete={deleteSupplement}
       />
     </div>
   );
