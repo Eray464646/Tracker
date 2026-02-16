@@ -514,7 +514,7 @@ export default function DashboardPage() {
                   transition={{ duration: 1, ease: "easeOut" }}
                 />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-2xl font-bold text-gray-900 dark:text-white">
                   {completedHabits}/{totalHabits}
                 </span>
@@ -551,7 +551,7 @@ export default function DashboardPage() {
                   transition={{ duration: 1, ease: "easeOut" }}
                 />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-2xl font-bold text-gray-900 dark:text-white">
                   {Math.round(waterProgress)}%
                 </span>
@@ -646,6 +646,7 @@ export default function DashboardPage() {
                 onSwipeRight={() => toggleHabit(habit.id)}
                 onSwipeLeft={() => handleHabitSwipeLeft(habit)}
                 onLongPress={() => setEditingHabit(habit)}
+                onClick={() => toggleHabit(habit.id)}
               >
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}

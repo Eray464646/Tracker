@@ -129,6 +129,7 @@ export default function HabitsPage() {
               onSwipeRight={() => toggleHabit(habit.id)}
               onSwipeLeft={() => handleHabitSwipeLeft(habit)}
               onLongPress={() => setEditingHabit(habit)}
+              onClick={() => toggleHabit(habit.id)}
             >
               <motion.div
                 initial={{ opacity: 0, x: -20 }}

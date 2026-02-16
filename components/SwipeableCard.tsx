@@ -9,6 +9,7 @@ interface SwipeableCardProps {
   onSwipeRight?: () => void;
   onSwipeLeft?: () => void;
   onLongPress?: () => void;
+  onClick?: () => void;
   className?: string;
   disabled?: boolean;
 }
@@ -18,6 +19,7 @@ export default function SwipeableCard({
   onSwipeRight,
   onSwipeLeft,
   onLongPress,
+  onClick,
   className = '',
   disabled = false,
 }: SwipeableCardProps) {
@@ -25,6 +27,7 @@ export default function SwipeableCard({
   const [isDragging, setIsDragging] = useState(false);
   const [longPressTimer, setLongPressTimer] = useState<number | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const dragStartPos = useRef<{ x: number; y: number } | null>(null);
 
   // Transform x position to background colors
   const rightBgOpacity = useTransform(x, [0, 100], [0, 1]);
@@ -32,6 +35,7 @@ export default function SwipeableCard({
 
   const handleDragStart = () => {
     setIsDragging(true);
+    dragStartPos.current = { x: x.get(), y: 0 };
   };
 
   const handleDrag = () => {
@@ -60,10 +64,14 @@ export default function SwipeableCard({
         navigator.vibrate(10);
       }
       onSwipeLeft();
+    } else if (Math.abs(info.offset.x) < 5 && Math.abs(info.offset.y) < 5 && onClick) {
+      // Click detected - no significant drag movement
+      onClick();
     }
 
     // Reset position
     x.set(0);
+    dragStartPos.current = null;
   };
 
   const handleLongPressStart = () => {
