@@ -554,7 +554,7 @@ export default function DashboardPage() {
                   transition={{ duration: 1, ease: "easeOut" }}
                 />
               </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 <span className="text-2xl font-bold text-gray-900 dark:text-white">
                   {completedHabits}/{totalHabits}
                 </span>
@@ -591,7 +591,7 @@ export default function DashboardPage() {
                   transition={{ duration: 1, ease: "easeOut" }}
                 />
               </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 <div className="text-center">
                   <span className="text-xl font-bold text-gray-900 dark:text-white block">
                     {waterIntake}
@@ -903,7 +903,7 @@ export default function DashboardPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowWaterSettings(false)}
-              className="fixed inset-0 bg-black/50 z-40"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
             >
               {/* Modal - Fixed and Centered */}
               <motion.div
@@ -912,7 +912,7 @@ export default function DashboardPage() {
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
                 transition={{ type: 'spring', damping: 30, stiffness: 300 }}
                 onClick={(e) => e.stopPropagation()}
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-32px)] max-w-[400px] max-h-[80vh] bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl"
+                className="w-[90%] max-w-[400px] mx-auto max-h-[80vh] bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">

@@ -152,8 +152,13 @@ export default function HabitsPage() {
                       </span>
                     </div>
                   </div>
-                  <div
-                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+                  <motion.div
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      toggleHabit(habit.id);
+                    }}
+                    whileTap={{ scale: 0.9 }}
+                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer ${
                       habit.completedToday
                         ? 'bg-success-500 border-success-500'
                         : 'border-gray-300 dark:border-gray-600'
@@ -174,7 +179,7 @@ export default function HabitsPage() {
                         />
                       </svg>
                     )}
-                  </div>
+                  </motion.div>
                 </div>
               </motion.div>
             </SwipeableCard>
