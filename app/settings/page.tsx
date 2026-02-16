@@ -46,6 +46,11 @@ export default function SettingsPage() {
   };
 
   const toggleDarkMode = () => {
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+    
     let newMode: 'light' | 'dark' | 'auto';
     
     if (darkMode === 'auto') {
@@ -135,6 +140,11 @@ export default function SettingsPage() {
 
   const exportData = () => {
     try {
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+      
       // Gather all data from localStorage
       const habits = localStorage.getItem('habits');
       const supplements = localStorage.getItem('supplements');

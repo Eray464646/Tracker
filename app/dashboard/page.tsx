@@ -113,6 +113,25 @@ export default function DashboardPage() {
       localStorage.setItem('supplements', JSON.stringify(defaultSupplements));
     }
 
+    // Schedule all notifications for habits and supplements with reminder times
+    if (savedHabits) {
+      const habits = JSON.parse(savedHabits);
+      habits.forEach((habit: Habit) => {
+        if (habit.reminderTime && 'Notification' in window && Notification.permission === 'granted') {
+          scheduleNotification(habit);
+        }
+      });
+    }
+    
+    if (savedSupplements) {
+      const supplements = JSON.parse(savedSupplements);
+      supplements.forEach((supplement: Supplement) => {
+        if (supplement.reminderTime && 'Notification' in window && Notification.permission === 'granted') {
+          scheduleSupplementNotification(supplement);
+        }
+      });
+    }
+
     // Handle scroll event for sticky header
     const handleScroll = () => {
       if (mainContentRef.current) {
@@ -254,16 +273,45 @@ export default function DashboardPage() {
     const now = new Date();
     const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
 
-    if (scheduledTime > now) {
-      const delay = scheduledTime.getTime() - now.getTime();
-      setTimeout(() => {
+    // If the time has passed today, schedule for tomorrow
+    if (scheduledTime <= now) {
+      scheduledTime.setDate(scheduledTime.getDate() + 1);
+    }
+
+    const delay = scheduledTime.getTime() - now.getTime();
+    setTimeout(() => {
+      if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('HabitFlow Erinnerung', {
           body: `Zeit für: ${habit.name} ${habit.icon}`,
           icon: '/icons/icon-192x192.png',
           badge: '/icons/icon-192x192.png',
         });
-      }, delay);
+      }
+    }, delay);
+  };
+
+  const scheduleSupplementNotification = (supplement: Supplement) => {
+    if (!supplement.reminderTime) return;
+
+    const [hours, minutes] = supplement.reminderTime.split(':').map(Number);
+    const now = new Date();
+    const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+
+    // If the time has passed today, schedule for tomorrow
+    if (scheduledTime <= now) {
+      scheduledTime.setDate(scheduledTime.getDate() + 1);
     }
+
+    const delay = scheduledTime.getTime() - now.getTime();
+    setTimeout(() => {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('HabitFlow Erinnerung', {
+          body: `Zeit für: ${supplement.name} ${supplement.icon}`,
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/icon-192x192.png',
+        });
+      }
+    }, delay);
   };
 
   const handleLongPressStart = (habit: Habit) => {
@@ -362,6 +410,11 @@ export default function DashboardPage() {
     const updatedSupplements = [...supplements, newSupplement];
     setSupplements(updatedSupplements);
     localStorage.setItem('supplements', JSON.stringify(updatedSupplements));
+
+    // Schedule notification if reminder time is set
+    if (newSupplement.reminderTime && 'Notification' in window && Notification.permission === 'granted') {
+      scheduleSupplementNotification(newSupplement);
+    }
   };
 
   const updateSupplement = (id: string, updates: Partial<Supplement>) => {
