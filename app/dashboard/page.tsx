@@ -26,7 +26,7 @@ export default function DashboardPage() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const mainContentRef = useRef<HTMLDivElement>(null);
   
   const WATER_TARGET = 2500; // ml
   const WATER_INCREMENT = 250; // ml
@@ -70,12 +70,12 @@ export default function DashboardPage() {
 
     // Handle scroll event for sticky header
     const handleScroll = () => {
-      if (scrollContainerRef.current) {
-        setIsScrolled(scrollContainerRef.current.scrollTop > 20);
+      if (mainContentRef.current) {
+        setIsScrolled(mainContentRef.current.scrollTop > 20);
       }
     };
 
-    const container = scrollContainerRef.current;
+    const container = mainContentRef.current;
     container?.addEventListener('scroll', handleScroll);
     return () => container?.removeEventListener('scroll', handleScroll);
   }, []);
@@ -86,7 +86,7 @@ export default function DashboardPage() {
     localStorage.setItem('water-intake', newAmount.toString());
     
     // Celebrate if target reached
-    if (newAmount === WATER_TARGET && waterIntake < WATER_TARGET) {
+    if (newAmount === WATER_TARGET) {
       confetti({
         particleCount: 50,
         spread: 60,
@@ -157,7 +157,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div ref={scrollContainerRef} className="overflow-y-auto px-4 py-6 space-y-4">
+      <div ref={mainContentRef} className="overflow-y-auto px-4 py-6 space-y-4">
         {/* Apple Watch Style Rings */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
