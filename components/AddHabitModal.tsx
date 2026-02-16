@@ -65,13 +65,14 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
             className="fixed inset-0 bg-black/50 z-40"
           />
 
-          {/* Modal */}
+          {/* Modal - Centered on screen */}
           <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white dark:bg-gray-900 rounded-t-3xl z-50 safe-area-bottom"
+            onClick={(e) => e.stopPropagation()}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[400px] max-h-[85vh] bg-white dark:bg-gray-900 rounded-3xl z-50 overflow-hidden shadow-2xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">

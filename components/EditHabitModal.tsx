@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Trash2, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Habit } from '@/types';
+import CustomAlert from './CustomAlert';
 
 interface EditHabitModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export default function EditHabitModal({
   const [rhythm, setRhythm] = useState<'daily' | 'weekly'>('daily');
   const [reminderTime, setReminderTime] = useState('');
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
   // Update state when habit changes
   useEffect(() => {
@@ -59,15 +61,19 @@ export default function EditHabitModal({
     onClose();
   };
 
-  const handleDelete = () => {
+  const handleDeleteClick = () => {
+    setShowDeleteAlert(true);
+  };
+
+  const handleDeleteConfirm = () => {
     if (!habit) return;
-    
-    // TODO: Replace confirm() with custom iOS-style confirmation modal
-    const confirmed = confirm(`Möchten Sie "${habit.name}" wirklich löschen?`);
-    if (confirmed) {
-      onDelete(habit.id);
-      onClose();
-    }
+    onDelete(habit.id);
+    setShowDeleteAlert(false);
+    onClose();
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteAlert(false);
   };
 
   const toggleDay = (day: number) => {
@@ -93,13 +99,14 @@ export default function EditHabitModal({
             className="fixed inset-0 bg-black/50 z-40"
           />
 
-          {/* Modal */}
+          {/* Modal - Centered on screen */}
           <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white dark:bg-gray-900 rounded-t-3xl z-50 safe-area-bottom"
+            onClick={(e) => e.stopPropagation()}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[400px] max-h-[85vh] bg-white dark:bg-gray-900 rounded-3xl z-50 overflow-hidden shadow-2xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
@@ -139,7 +146,7 @@ export default function EditHabitModal({
                     Bearbeiten
                   </button>
                   <button
-                    onClick={handleDelete}
+                    onClick={handleDeleteClick}
                     className="w-full flex items-center justify-center gap-2 py-3 bg-red-500 text-white rounded-xl font-semibold ios-button"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -282,6 +289,18 @@ export default function EditHabitModal({
               </>
             )}
           </motion.div>
+
+          {/* Delete Confirmation Alert */}
+          <CustomAlert
+            isOpen={showDeleteAlert}
+            title="Gewohnheit löschen"
+            message={`Möchten Sie "${habit?.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+            confirmText="Löschen"
+            cancelText="Abbrechen"
+            variant="destructive"
+            onConfirm={handleDeleteConfirm}
+            onCancel={handleDeleteCancel}
+          />
         </>
       )}
     </AnimatePresence>

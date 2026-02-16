@@ -42,6 +42,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        {/* iOS Splash Screens */}
+        <link rel="apple-touch-startup-image" href="/icons/icon-192x192.png" />
+        <meta name="apple-mobile-web-app-title" content="HabitFlow" />
       </head>
       <body className="antialiased">
         <div className="flex flex-col h-full max-w-[430px] w-full mx-auto bg-gray-50 dark:bg-black">
@@ -50,6 +53,28 @@ export default function RootLayout({
           </main>
           <BottomNav />
         </div>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Apply dark mode before page renders to prevent flash
+              (function() {
+                const savedMode = localStorage.getItem('dark-mode');
+                const html = document.documentElement;
+                
+                if (savedMode === 'dark') {
+                  html.classList.add('dark');
+                } else if (savedMode === 'light') {
+                  html.classList.remove('dark');
+                } else {
+                  // Auto mode or not set - follow system preference
+                  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    html.classList.add('dark');
+                  }
+                }
+              })();
+            `,
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
