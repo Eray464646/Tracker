@@ -65,7 +65,8 @@ export default function SwipeableCard({
       }
       onSwipeLeft();
     } else if (Math.abs(info.offset.x) < 10 && Math.abs(info.offset.y) < 10 && onClick) {
-      // Click detected - no significant drag movement (increased threshold to 10px)
+      // Click detected - no significant drag movement
+      // Threshold increased from 5px to 10px to improve click detection reliability
       onClick();
     }
 

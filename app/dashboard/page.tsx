@@ -14,11 +14,15 @@ import SwipeableCard from '@/components/SwipeableCard';
 import CustomAlert from '@/components/CustomAlert';
 
 export default function DashboardPage() {
+  const DEFAULT_WATER_TARGET = 2500; // ml
+  const DEFAULT_WATER_SIZES = [200, 250, 1000]; // ml
+  
   const [currentDate, setCurrentDate] = useState(new Date());
   const [waterIntake, setWaterIntake] = useState(0);
   const [selectedWaterSize, setSelectedWaterSize] = useState(250); // Default 250ml
-  const [waterTarget, setWaterTarget] = useState(2500); // ml - customizable
-  const [waterSizes, setWaterSizes] = useState<number[]>([200, 250, 1000]); // Default sizes
+  const [waterTarget, setWaterTarget] = useState(DEFAULT_WATER_TARGET);
+  const [waterSizes, setWaterSizes] = useState<number[]>(DEFAULT_WATER_SIZES);
+  const [customWaterSize, setCustomWaterSize] = useState('');
   const [habits, setHabits] = useState<Habit[]>([]);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -931,7 +935,7 @@ export default function DashboardPage() {
                     <input
                       type="number"
                       value={waterTarget}
-                      onChange={(e) => updateWaterTarget(Math.max(100, parseInt(e.target.value) || 2500))}
+                      onChange={(e) => updateWaterTarget(Math.max(100, parseInt(e.target.value) || DEFAULT_WATER_TARGET))}
                       min="100"
                       step="100"
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
@@ -966,7 +970,8 @@ export default function DashboardPage() {
                     <div className="flex gap-2">
                       <input
                         type="number"
-                        id="customWaterSize"
+                        value={customWaterSize}
+                        onChange={(e) => setCustomWaterSize(e.target.value)}
                         placeholder="z.B. 500"
                         min="1"
                         step="50"
@@ -974,11 +979,10 @@ export default function DashboardPage() {
                       />
                       <button
                         onClick={() => {
-                          const input = document.getElementById('customWaterSize') as HTMLInputElement;
-                          const size = parseInt(input.value);
+                          const size = parseInt(customWaterSize);
                           if (size > 0) {
                             addCustomWaterSize(size);
-                            input.value = '';
+                            setCustomWaterSize('');
                           }
                         }}
                         className="px-4 py-2 bg-primary-500 text-white rounded-xl font-medium ios-button"
