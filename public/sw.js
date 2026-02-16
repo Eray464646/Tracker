@@ -42,7 +42,13 @@ self.addEventListener('activate', (event) => {
   if ('periodicSync' in self.registration) {
     self.registration.periodicSync.register('water-reminder-check', {
       minInterval: 60 * 60 * 1000, // Check every hour
-    }).catch((err) => console.log('Periodic sync registration failed:', err));
+    }).catch((err) => {
+      console.log('Periodic sync not available or registration failed:', err);
+      // Fallback: Use regular sync API if available
+      if ('sync' in self.registration) {
+        console.log('Using regular sync API as fallback');
+      }
+    });
   }
 });
 

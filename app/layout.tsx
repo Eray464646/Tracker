@@ -57,6 +57,8 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               // Apply dark mode before page renders to prevent flash
+              // NOTE: This logic is intentionally duplicated from settings page
+              // to ensure dark mode is applied before any React rendering occurs
               (function() {
                 const savedMode = localStorage.getItem('dark-mode');
                 const html = document.documentElement;

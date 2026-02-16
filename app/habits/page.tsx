@@ -98,7 +98,9 @@ export default function HabitsPage() {
             className="ios-card dark:bg-[#1C1C1E] p-4 text-center"
           >
             <Target className="w-6 h-6 text-primary-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{Math.round((completedToday / totalHabits) * 100) || 0}%</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {totalHabits > 0 ? Math.round((completedToday / totalHabits) * 100) : 0}%
+            </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Fortschritt</p>
           </motion.div>
           <motion.div

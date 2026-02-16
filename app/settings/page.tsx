@@ -15,12 +15,10 @@ export default function SettingsPage() {
 
   // Load dark mode preference from localStorage on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedMode = localStorage.getItem('dark-mode') as 'light' | 'dark' | 'auto' | null;
-      if (savedMode) {
-        setDarkMode(savedMode);
-        applyDarkMode(savedMode);
-      }
+    const savedMode = localStorage.getItem('dark-mode') as 'light' | 'dark' | 'auto' | null;
+    if (savedMode) {
+      setDarkMode(savedMode);
+      applyDarkMode(savedMode);
     }
   }, []);
 
