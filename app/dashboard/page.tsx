@@ -10,6 +10,8 @@ import AddTaskModal from '@/components/AddTaskModal';
 import EditHabitModal from '@/components/EditHabitModal';
 import AddSupplementModal from '@/components/AddSupplementModal';
 import EditSupplementModal from '@/components/EditSupplementModal';
+import SwipeableCard from '@/components/SwipeableCard';
+import CustomAlert from '@/components/CustomAlert';
 
 export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -26,6 +28,7 @@ export default function DashboardPage() {
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [undoTimer, setUndoTimer] = useState<NodeJS.Timeout | null>(null);
   const [lastTakenSupplement, setLastTakenSupplement] = useState<string | null>(null);
+  const [habitToDelete, setHabitToDelete] = useState<Habit | null>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
   
   const WATER_TARGET = 2500; // ml
@@ -78,13 +81,51 @@ export default function DashboardPage() {
 
     const container = mainContentRef.current;
     container?.addEventListener('scroll', handleScroll);
-    return () => container?.removeEventListener('scroll', handleScroll);
+
+    // Listen for service worker messages
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'CHECK_WATER_REMINDER') {
+        const lastWaterTime = localStorage.getItem('last-water-time');
+        if (lastWaterTime) {
+          const timeSinceLastWater = Date.now() - new Date(lastWaterTime).getTime();
+          const twoHours = 2 * 60 * 60 * 1000;
+          
+          if (timeSinceLastWater > twoHours && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification('HabitFlow Wassererinnerung', {
+              body: 'Vergiss nicht, Wasser zu trinken! 💧',
+              icon: '/icons/icon-192x192.png',
+              tag: 'water-reminder',
+            });
+          }
+        }
+      }
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+    }
+
+    return () => {
+      container?.removeEventListener('scroll', handleScroll);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+      }
+    };
   }, []);
 
   const addWater = () => {
     const newAmount = Math.min(waterIntake + selectedWaterSize, WATER_TARGET);
     setWaterIntake(newAmount);
     localStorage.setItem('water-intake', newAmount.toString());
+    localStorage.setItem('last-water-time', new Date().toISOString());
+    
+    // Notify service worker of water intake update
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'WATER_INTAKE_UPDATE',
+        timestamp: new Date().toISOString(),
+      });
+    }
     
     // Celebrate if target just reached (not if already at target)
     if (newAmount === WATER_TARGET && waterIntake < WATER_TARGET) {
@@ -138,6 +179,11 @@ export default function DashboardPage() {
     const updatedHabits = habits.filter((habit) => habit.id !== id);
     setHabits(updatedHabits);
     localStorage.setItem('habits', JSON.stringify(updatedHabits));
+    setHabitToDelete(null);
+  };
+
+  const handleHabitSwipeLeft = (habit: Habit) => {
+    setHabitToDelete(habit);
   };
 
   const addTask = (taskData: Omit<Task, 'id' | 'completed' | 'createdAt'>) => {
@@ -471,62 +517,57 @@ export default function DashboardPage() {
           </div>
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {habits.map((habit, index) => (
-              <motion.div
+              <SwipeableCard
                 key={habit.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-4 py-3 ios-button cursor-pointer"
-                onClick={() => {
-                  if (!longPressTimer) {
-                    toggleHabit(habit.id);
-                  }
-                }}
-                onMouseDown={() => handleLongPressStart(habit)}
-                onMouseUp={handleLongPressEnd}
-                onMouseLeave={handleLongPressEnd}
-                onTouchStart={() => handleLongPressStart(habit)}
-                onTouchEnd={handleLongPressEnd}
+                onSwipeRight={() => toggleHabit(habit.id)}
+                onSwipeLeft={() => handleHabitSwipeLeft(habit)}
+                onLongPress={() => setEditingHabit(habit)}
               >
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl">{habit.icon}</div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`font-medium ${
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="px-4 py-3 ios-button cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">{habit.icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={`font-medium ${
+                          habit.completedToday
+                            ? 'line-through text-gray-400 dark:text-gray-500'
+                            : 'text-gray-900 dark:text-white'
+                        }`}
+                      >
+                        {habit.name}
+                      </p>
+                    </div>
+                    <div
+                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
                         habit.completedToday
-                          ? 'line-through text-gray-400 dark:text-gray-500'
-                          : 'text-gray-900 dark:text-white'
+                          ? 'bg-success-500 border-success-500'
+                          : 'border-gray-300 dark:border-gray-600'
                       }`}
                     >
-                      {habit.name}
-                    </p>
+                      {habit.completedToday && (
+                        <svg
+                          className="w-5 h-5 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
+                    </div>
                   </div>
-                  <div
-                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
-                      habit.completedToday
-                        ? 'bg-success-500 border-success-500'
-                        : 'border-gray-300 dark:border-gray-600'
-                    }`}
-                  >
-                    {habit.completedToday && (
-                      <svg
-                        className="w-5 h-5 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={3}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              </SwipeableCard>
             ))}
           </div>
         </div>
@@ -669,6 +710,18 @@ export default function DashboardPage() {
         supplement={editingSupplement}
         onUpdate={updateSupplement}
         onDelete={deleteSupplement}
+      />
+
+      {/* Delete Habit Confirmation */}
+      <CustomAlert
+        isOpen={!!habitToDelete}
+        title="Gewohnheit löschen"
+        message={`Möchten Sie "${habitToDelete?.name}" wirklich löschen?`}
+        confirmText="Löschen"
+        cancelText="Abbrechen"
+        variant="destructive"
+        onConfirm={() => habitToDelete && deleteHabit(habitToDelete.id)}
+        onCancel={() => setHabitToDelete(null)}
       />
     </div>
   );
