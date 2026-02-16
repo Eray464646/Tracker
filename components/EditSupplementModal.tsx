@@ -3,58 +3,58 @@
 import { useState, useEffect } from 'react';
 import { X, Trash2, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Habit } from '@/types';
+import type { Supplement } from '@/types';
 import CustomAlert from './CustomAlert';
 
-interface EditHabitModalProps {
+interface EditSupplementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  habit: Habit | null;
-  onUpdate: (id: string, updates: Partial<Habit>) => void;
+  supplement: Supplement | null;
+  onUpdate: (id: string, updates: Partial<Supplement>) => void;
   onDelete: (id: string) => void;
 }
 
 const COMMON_ICONS = [
-  '🧘', '📚', '💪', '🥗', '🏃', '🚴', '🧘‍♀️', '💧',
-  '☕', '🛌', '🎨', '✍️', '🎵', '🧹', '💼', '🎯',
-  '🌅', '🌙', '⏰', '📱', '🧠', '❤️', '🌟', '✨',
+  '💊', '💉', '🧪', '⚗️', '🩺', '🌿', '🍃', '🌱',
+  '☀️', '🐟', '🥛', '🫐', '🥕', '🍊', '🥗', '🍎',
+  '💪', '🧠', '❤️', '🦴', '👁️', '🫀', '🫁', '💚',
 ];
 
-export default function EditHabitModal({
+export default function EditSupplementModal({
   isOpen,
   onClose,
-  habit,
+  supplement,
   onUpdate,
   onDelete,
-}: EditHabitModalProps) {
+}: EditSupplementModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState('');
-  const [icon, setIcon] = useState('✨');
-  const [rhythm, setRhythm] = useState<'daily' | 'weekly'>('daily');
+  const [icon, setIcon] = useState('💊');
+  const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
   const [reminderTime, setReminderTime] = useState('');
-  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5, 6, 0]);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
-  // Update state when habit changes
+  // Update state when supplement changes
   useEffect(() => {
-    if (habit) {
-      setName(habit.name);
-      setIcon(habit.icon);
-      setRhythm(habit.rhythm);
-      setReminderTime(habit.reminderTime || '');
-      setSelectedDays(habit.weekDays || [1, 2, 3, 4, 5]);
+    if (supplement) {
+      setName(supplement.name);
+      setIcon(supplement.icon);
+      setFrequency(supplement.frequency || 'daily');
+      setReminderTime(supplement.reminderTime || '');
+      setSelectedDays(supplement.weekDays || [1, 2, 3, 4, 5, 6, 0]);
     }
-  }, [habit]);
+  }, [supplement]);
 
   const handleUpdate = () => {
-    if (!habit || !name.trim()) return;
+    if (!supplement || !name.trim()) return;
 
-    onUpdate(habit.id, {
+    onUpdate(supplement.id, {
       name: name.trim(),
       icon,
-      rhythm,
+      frequency,
       reminderTime: reminderTime || undefined,
-      weekDays: rhythm === 'weekly' ? selectedDays : undefined,
+      weekDays: frequency === 'weekly' ? selectedDays : undefined,
     });
 
     setIsEditing(false);
@@ -66,8 +66,8 @@ export default function EditHabitModal({
   };
 
   const handleDeleteConfirm = () => {
-    if (!habit) return;
-    onDelete(habit.id);
+    if (!supplement) return;
+    onDelete(supplement.id);
     setShowDeleteAlert(false);
     onClose();
   };
@@ -84,7 +84,7 @@ export default function EditHabitModal({
 
   const weekDays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
-  if (!habit) return null;
+  if (!supplement) return null;
 
   return (
     <AnimatePresence>
@@ -96,7 +96,7 @@ export default function EditHabitModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           />
 
           {/* Modal - Centered on screen */}
@@ -111,7 +111,7 @@ export default function EditHabitModal({
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {isEditing ? 'Gewohnheit bearbeiten' : 'Gewohnheit verwalten'}
+                {isEditing ? 'Supplement bearbeiten' : 'Supplement verwalten'}
               </h2>
               <button
                 onClick={onClose}
@@ -124,14 +124,14 @@ export default function EditHabitModal({
             {/* Content */}
             {!isEditing ? (
               <div className="px-6 py-4">
-                {/* Habit Info */}
+                {/* Supplement Info */}
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="text-5xl">{habit.icon}</div>
+                  <div className="text-5xl">{supplement.icon}</div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{habit.name}</h3>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{supplement.name}</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {habit.rhythm === 'daily' ? 'Täglich' : 'Wöchentlich'}
-                      {habit.reminderTime && ` • ${habit.reminderTime}`}
+                      {supplement.frequency === 'daily' ? 'Täglich' : 'Wöchentlich'}
+                      {supplement.reminderTime && ` • ${supplement.reminderTime}`}
                     </p>
                   </div>
                 </div>
@@ -140,7 +140,7 @@ export default function EditHabitModal({
                 <div className="space-y-3">
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-primary-500 text-white rounded-xl font-semibold ios-button"
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-purple-500 text-white rounded-xl font-semibold ios-button"
                   >
                     <Edit3 className="w-5 h-5" />
                     Bearbeiten
@@ -162,7 +162,7 @@ export default function EditHabitModal({
               </div>
             ) : (
               <>
-                <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+                <div className="px-6 py-4 max-h-[calc(85vh-140px)] overflow-y-auto">
                   {/* Name Input */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -172,8 +172,8 @@ export default function EditHabitModal({
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="z.B. Morgenmeditation"
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500"
+                      placeholder="z.B. Vitamin D"
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
 
@@ -189,7 +189,7 @@ export default function EditHabitModal({
                           onClick={() => setIcon(emoji)}
                           className={`aspect-square rounded-xl flex items-center justify-center text-2xl ios-button ${
                             icon === emoji
-                              ? 'bg-primary-500 ring-2 ring-primary-500'
+                              ? 'bg-purple-500 ring-2 ring-purple-500'
                               : 'bg-gray-50 dark:bg-gray-800'
                           }`}
                         >
@@ -199,27 +199,27 @@ export default function EditHabitModal({
                     </div>
                   </div>
 
-                  {/* Rhythm Selection */}
+                  {/* Frequency Selection */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Rhythmus
+                      Frequenz
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <button
-                        onClick={() => setRhythm('daily')}
+                        onClick={() => setFrequency('daily')}
                         className={`py-3 px-4 rounded-xl font-medium ios-button ${
-                          rhythm === 'daily'
-                            ? 'bg-primary-500 text-white'
+                          frequency === 'daily'
+                            ? 'bg-purple-500 text-white'
                             : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                         }`}
                       >
                         Täglich
                       </button>
                       <button
-                        onClick={() => setRhythm('weekly')}
+                        onClick={() => setFrequency('weekly')}
                         className={`py-3 px-4 rounded-xl font-medium ios-button ${
-                          rhythm === 'weekly'
-                            ? 'bg-primary-500 text-white'
+                          frequency === 'weekly'
+                            ? 'bg-purple-500 text-white'
                             : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                         }`}
                       >
@@ -229,7 +229,7 @@ export default function EditHabitModal({
                   </div>
 
                   {/* Week Days Selection */}
-                  {rhythm === 'weekly' && (
+                  {frequency === 'weekly' && (
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Wochentage
@@ -241,7 +241,7 @@ export default function EditHabitModal({
                             onClick={() => toggleDay(index)}
                             className={`flex-1 py-2 rounded-lg text-sm font-medium ios-button ${
                               selectedDays.includes(index)
-                                ? 'bg-primary-500 text-white'
+                                ? 'bg-purple-500 text-white'
                                 : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                             }`}
                           >
@@ -261,7 +261,7 @@ export default function EditHabitModal({
                       type="time"
                       value={reminderTime}
                       onChange={(e) => setReminderTime(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
                 </div>
@@ -273,7 +273,7 @@ export default function EditHabitModal({
                     disabled={!name.trim()}
                     className={`w-full py-3 rounded-xl font-semibold ios-button ${
                       name.trim()
-                        ? 'bg-primary-500 text-white'
+                        ? 'bg-purple-500 text-white'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
                     }`}
                   >
@@ -293,8 +293,8 @@ export default function EditHabitModal({
           {/* Delete Confirmation Alert */}
           <CustomAlert
             isOpen={showDeleteAlert}
-            title="Gewohnheit löschen"
-            message={`Möchten Sie "${habit?.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+            title="Supplement löschen"
+            message={`Möchten Sie "${supplement?.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
             confirmText="Löschen"
             cancelText="Abbrechen"
             variant="destructive"

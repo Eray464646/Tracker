@@ -9,6 +9,8 @@ const urlsToCache = [
   '/manifest.json',
 ];
 
+const WATER_REMINDER_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+
 // Install event - cache resources
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -19,20 +21,35 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and start background sync
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    Promise.all([
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      self.clients.claim(),
+    ])
   );
-  self.clients.claim();
+  
+  // Start periodic background sync for water reminders
+  if ('periodicSync' in self.registration) {
+    self.registration.periodicSync.register('water-reminder-check', {
+      minInterval: 60 * 60 * 1000, // Check every hour
+    }).catch((err) => {
+      console.log('Periodic sync not available or registration failed:', err);
+      // Fallback: Use regular sync API if available
+      if ('sync' in self.registration) {
+        console.log('Using regular sync API as fallback');
+      }
+    });
+  }
 });
 
 // Fetch event - serve from cache, fallback to network
@@ -77,4 +94,70 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     clients.openWindow('/')
   );
+});
+
+// Periodic sync event for water reminders
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'water-reminder-check') {
+    event.waitUntil(checkWaterReminder());
+  }
+});
+
+// Background sync for water reminders
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'water-reminder') {
+    event.waitUntil(checkWaterReminder());
+  }
+});
+
+// Check if water reminder should be sent
+async function checkWaterReminder() {
+  try {
+    // Get last water intake time from clients
+    const allClients = await clients.matchAll({
+      includeUncontrolled: true,
+      type: 'window',
+    });
+
+    // If no clients are open, check localStorage through message
+    if (allClients.length === 0) {
+      // Show notification if needed
+      await self.registration.showNotification('HabitFlow Wassererinnerung', {
+        body: 'Vergiss nicht, Wasser zu trinken! 💧',
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-72x72.png',
+        tag: 'water-reminder',
+        requireInteraction: false,
+        vibrate: [200, 100, 200],
+      });
+    } else {
+      // Ask client for last water intake time
+      for (const client of allClients) {
+        client.postMessage({
+          type: 'CHECK_WATER_REMINDER',
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error checking water reminder:', error);
+  }
+}
+
+// Listen for messages from clients
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'WATER_INTAKE_UPDATE') {
+    // Client updated water intake, reset reminder timer
+    const lastIntakeTime = event.data.timestamp;
+    
+    // Schedule next check
+    if ('setTimeout' in self) {
+      setTimeout(() => {
+        checkWaterReminder();
+      }, WATER_REMINDER_INTERVAL);
+    }
+  }
+  
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

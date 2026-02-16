@@ -3,26 +3,26 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Habit } from '@/types';
+import type { Supplement } from '@/types';
 
-interface AddHabitModalProps {
+interface AddSupplementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (habit: Omit<Habit, 'id' | 'completedToday' | 'createdAt'>) => void;
+  onAdd: (supplement: Omit<Supplement, 'id' | 'streak' | 'takenToday'>) => void;
 }
 
 const COMMON_ICONS = [
-  '🧘', '📚', '💪', '🥗', '🏃', '🚴', '🧘‍♀️', '💧',
-  '☕', '🛌', '🎨', '✍️', '🎵', '🧹', '💼', '🎯',
-  '🌅', '🌙', '⏰', '📱', '🧠', '❤️', '🌟', '✨',
+  '💊', '💉', '🧪', '⚗️', '🩺', '🌿', '🍃', '🌱',
+  '☀️', '🐟', '🥛', '🫐', '🥕', '🍊', '🥗', '🍎',
+  '💪', '🧠', '❤️', '🦴', '👁️', '🫀', '🫁', '💚',
 ];
 
-export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalProps) {
+export default function AddSupplementModal({ isOpen, onClose, onAdd }: AddSupplementModalProps) {
   const [name, setName] = useState('');
-  const [icon, setIcon] = useState('✨');
-  const [rhythm, setRhythm] = useState<'daily' | 'weekly'>('daily');
+  const [icon, setIcon] = useState('💊');
+  const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
   const [reminderTime, setReminderTime] = useState('');
-  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]); // Mon-Fri
+  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5, 6, 0]); // All days
 
   const handleSubmit = () => {
     if (!name.trim()) return;
@@ -30,17 +30,17 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
     onAdd({
       name: name.trim(),
       icon,
-      rhythm,
+      frequency,
       reminderTime: reminderTime || undefined,
-      weekDays: rhythm === 'weekly' ? selectedDays : undefined,
+      weekDays: frequency === 'weekly' ? selectedDays : undefined,
     });
 
     // Reset form
     setName('');
-    setIcon('✨');
-    setRhythm('daily');
+    setIcon('💊');
+    setFrequency('daily');
     setReminderTime('');
-    setSelectedDays([1, 2, 3, 4, 5]);
+    setSelectedDays([1, 2, 3, 4, 5, 6, 0]);
     onClose();
   };
 
@@ -62,7 +62,7 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           />
 
           {/* Modal - Centered on screen */}
@@ -76,7 +76,7 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Neue Gewohnheit</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Neues Supplement</h2>
               <button
                 onClick={onClose}
                 className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 ios-button"
@@ -86,7 +86,7 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
             </div>
 
             {/* Content */}
-            <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+            <div className="px-6 py-4 max-h-[calc(85vh-140px)] overflow-y-auto">
               {/* Name Input */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -96,8 +96,8 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="z.B. Morgenmeditation"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500"
+                  placeholder="z.B. Vitamin D"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500"
                   autoFocus
                 />
               </div>
@@ -114,7 +114,7 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
                       onClick={() => setIcon(emoji)}
                       className={`aspect-square rounded-xl flex items-center justify-center text-2xl ios-button ${
                         icon === emoji
-                          ? 'bg-primary-500 ring-2 ring-primary-500'
+                          ? 'bg-purple-500 ring-2 ring-purple-500'
                           : 'bg-gray-50 dark:bg-gray-800'
                       }`}
                     >
@@ -124,27 +124,27 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
                 </div>
               </div>
 
-              {/* Rhythm Selection */}
+              {/* Frequency Selection */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Rhythmus
+                  Frequenz
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => setRhythm('daily')}
+                    onClick={() => setFrequency('daily')}
                     className={`py-3 px-4 rounded-xl font-medium ios-button ${
-                      rhythm === 'daily'
-                        ? 'bg-primary-500 text-white'
+                      frequency === 'daily'
+                        ? 'bg-purple-500 text-white'
                         : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     Täglich
                   </button>
                   <button
-                    onClick={() => setRhythm('weekly')}
+                    onClick={() => setFrequency('weekly')}
                     className={`py-3 px-4 rounded-xl font-medium ios-button ${
-                      rhythm === 'weekly'
-                        ? 'bg-primary-500 text-white'
+                      frequency === 'weekly'
+                        ? 'bg-purple-500 text-white'
                         : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                     }`}
                   >
@@ -153,8 +153,8 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
                 </div>
               </div>
 
-              {/* Week Days Selection (for weekly rhythm) */}
-              {rhythm === 'weekly' && (
+              {/* Week Days Selection (for weekly frequency) */}
+              {frequency === 'weekly' && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Wochentage
@@ -166,7 +166,7 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
                         onClick={() => toggleDay(index)}
                         className={`flex-1 py-2 rounded-lg text-sm font-medium ios-button ${
                           selectedDays.includes(index)
-                            ? 'bg-primary-500 text-white'
+                            ? 'bg-purple-500 text-white'
                             : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                         }`}
                       >
@@ -186,7 +186,7 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
                   type="time"
                   value={reminderTime}
                   onChange={(e) => setReminderTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
                 />
               </div>
             </div>
@@ -198,11 +198,11 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
                 disabled={!name.trim()}
                 className={`w-full py-3 rounded-xl font-semibold ios-button ${
                   name.trim()
-                    ? 'bg-primary-500 text-white'
+                    ? 'bg-purple-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
                 }`}
               >
-                Gewohnheit hinzufügen
+                Supplement hinzufügen
               </button>
             </div>
           </motion.div>

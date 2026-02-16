@@ -1,12 +1,70 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, Moon, Globe, Lock, HelpCircle, Mail, Smartphone, ChevronRight, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { AppData } from '@/types';
+import CustomAlert from '@/components/CustomAlert';
 
 export default function SettingsPage() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [darkMode, setDarkMode] = useState<'light' | 'dark' | 'auto'>('auto');
+
+  // Load dark mode preference from localStorage on mount
+  useEffect(() => {
+    const savedMode = localStorage.getItem('dark-mode') as 'light' | 'dark' | 'auto' | null;
+    if (savedMode) {
+      setDarkMode(savedMode);
+      applyDarkMode(savedMode);
+    }
+  }, []);
+
+  const applyDarkMode = (mode: 'light' | 'dark' | 'auto') => {
+    const html = document.documentElement;
+    
+    if (mode === 'dark') {
+      html.classList.add('dark');
+    } else if (mode === 'light') {
+      html.classList.remove('dark');
+    } else {
+      // Auto mode - follow system preference
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        html.classList.add('dark');
+      } else {
+        html.classList.remove('dark');
+      }
+    }
+  };
+
+  const toggleDarkMode = () => {
+    let newMode: 'light' | 'dark' | 'auto';
+    
+    if (darkMode === 'auto') {
+      newMode = 'light';
+    } else if (darkMode === 'light') {
+      newMode = 'dark';
+    } else {
+      newMode = 'auto';
+    }
+    
+    setDarkMode(newMode);
+    localStorage.setItem('dark-mode', newMode);
+    applyDarkMode(newMode);
+  };
+
+  const getDarkModeLabel = () => {
+    switch (darkMode) {
+      case 'light':
+        return 'Hell';
+      case 'dark':
+        return 'Dunkel';
+      case 'auto':
+        return 'Auto';
+    }
+  };
 
   const requestNotificationPermission = async () => {
     if ('Notification' in window && 'serviceWorker' in navigator) {
@@ -53,12 +111,12 @@ export default function SettingsPage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      // TODO: Replace alert with toast notification for better UX
-      alert('✅ Daten erfolgreich exportiert!');
+      setAlertMessage('Daten erfolgreich exportiert!');
+      setShowSuccessAlert(true);
     } catch (error) {
       console.error('Export failed:', error);
-      // TODO: Replace alert with toast notification for better UX
-      alert('❌ Fehler beim Exportieren der Daten');
+      setAlertMessage('Fehler beim Exportieren der Daten');
+      setShowErrorAlert(true);
     }
   };
 
@@ -77,8 +135,9 @@ export default function SettingsPage() {
         {
           icon: Moon,
           label: 'Dunkler Modus',
-          description: 'Folgt den Systemeinstellungen',
-          type: 'info',
+          description: getDarkModeLabel(),
+          type: 'action',
+          onChange: toggleDarkMode,
         },
         {
           icon: Globe,
@@ -234,6 +293,25 @@ export default function SettingsPage() {
           <p className="mt-1">© 2024 HabitFlow. Alle Rechte vorbehalten.</p>
         </div>
       </div>
+
+      {/* Success Alert */}
+      <CustomAlert
+        isOpen={showSuccessAlert}
+        title="Erfolgreich"
+        message={alertMessage}
+        confirmText="OK"
+        onConfirm={() => setShowSuccessAlert(false)}
+      />
+
+      {/* Error Alert */}
+      <CustomAlert
+        isOpen={showErrorAlert}
+        title="Fehler"
+        message={alertMessage}
+        confirmText="OK"
+        variant="destructive"
+        onConfirm={() => setShowErrorAlert(false)}
+      />
     </div>
   );
 }
