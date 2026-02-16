@@ -44,7 +44,7 @@ export default function SwipeableCard({
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setIsDragging(false);
-    const swipeThreshold = 80;
+    const swipeThreshold = 45;
 
     if (info.offset.x > swipeThreshold && onSwipeRight) {
       // Swipe right - complete
@@ -65,7 +65,7 @@ export default function SwipeableCard({
           onLongPress();
           // Haptic feedback
           if ('vibrate' in navigator) {
-            navigator.vibrate(50);
+            navigator.vibrate(10);
           }
         }
       }, 500) as unknown as number;

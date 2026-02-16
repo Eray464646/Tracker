@@ -62,18 +62,17 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-40"
-          />
-
-          {/* Modal - Centered on screen */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[400px] max-h-[85vh] bg-white dark:bg-gray-900 rounded-3xl z-50 overflow-hidden shadow-2xl"
+            className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center"
           >
+            {/* Modal - Centered on screen */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-[calc(100%-32px)] max-w-[400px] max-h-[85vh] bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl"
+            >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Neue Gewohnheit</h2>
@@ -205,6 +204,7 @@ export default function AddHabitModal({ isOpen, onClose, onAdd }: AddHabitModalP
                 Gewohnheit hinzufügen
               </button>
             </div>
+            </motion.div>
           </motion.div>
         </>
       )}
