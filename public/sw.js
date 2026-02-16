@@ -115,8 +115,8 @@ async function checkWaterReminder() {
 
     // If no clients are open, check localStorage through message
     if (allClients.length === 0) {
-      // Try to get permission and show notification if needed
-      const permission = await self.registration.showNotification('HabitFlow Wassererinnerung', {
+      // Show notification if needed
+      await self.registration.showNotification('HabitFlow Wassererinnerung', {
         body: 'Vergiss nicht, Wasser zu trinken! 💧',
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-72x72.png',

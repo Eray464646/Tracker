@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, Moon, Globe, Lock, HelpCircle, Mail, Smartphone, ChevronRight, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { AppData } from '@/types';
@@ -14,7 +14,7 @@ export default function SettingsPage() {
   const [darkMode, setDarkMode] = useState<'light' | 'dark' | 'auto'>('auto');
 
   // Load dark mode preference from localStorage on mount
-  useState(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedMode = localStorage.getItem('dark-mode') as 'light' | 'dark' | 'auto' | null;
       if (savedMode) {
@@ -22,7 +22,7 @@ export default function SettingsPage() {
         applyDarkMode(savedMode);
       }
     }
-  });
+  }, []);
 
   const applyDarkMode = (mode: 'light' | 'dark' | 'auto') => {
     const html = document.documentElement;

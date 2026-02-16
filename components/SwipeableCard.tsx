@@ -23,7 +23,7 @@ export default function SwipeableCard({
 }: SwipeableCardProps) {
   const x = useMotionValue(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [longPressTimer, setLongPressTimer] = useState<number | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Transform x position to background colors
@@ -68,7 +68,7 @@ export default function SwipeableCard({
             navigator.vibrate(50);
           }
         }
-      }, 500);
+      }, 500) as unknown as number;
       setLongPressTimer(timer);
     }
   };

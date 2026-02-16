@@ -25,8 +25,8 @@ export default function DashboardPage() {
   const [showAddSupplementModal, setShowAddSupplementModal] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [editingSupplement, setEditingSupplement] = useState<Supplement | null>(null);
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
-  const [undoTimer, setUndoTimer] = useState<NodeJS.Timeout | null>(null);
+  const [longPressTimer, setLongPressTimer] = useState<number | null>(null);
+  const [undoTimer, setUndoTimer] = useState<number | null>(null);
   const [lastTakenSupplement, setLastTakenSupplement] = useState<string | null>(null);
   const [habitToDelete, setHabitToDelete] = useState<Habit | null>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
@@ -218,7 +218,7 @@ export default function DashboardPage() {
       if ('vibrate' in navigator) {
         navigator.vibrate(50);
       }
-    }, 500); // 500ms for long press
+    }, 500) as unknown as number; // 500ms for long press
     setLongPressTimer(timer);
   };
 
@@ -243,7 +243,7 @@ export default function DashboardPage() {
         setLastTakenSupplement(id);
         const timer = setTimeout(() => {
           setLastTakenSupplement(null);
-        }, 5000);
+        }, 5000) as unknown as number;
         setUndoTimer(timer);
         
         return {
@@ -313,7 +313,7 @@ export default function DashboardPage() {
       if ('vibrate' in navigator) {
         navigator.vibrate(50);
       }
-    }, 500);
+    }, 500) as unknown as number;
     setLongPressTimer(timer);
   };
 

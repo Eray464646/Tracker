@@ -62,11 +62,8 @@ export default function HabitsPage() {
     setHabitToDelete(habit);
   };
 
-  const totalStreak = habits.reduce((acc, habit) => {
-    // Calculate streak based on completion history (simplified for now)
-    return acc + (habit.completedToday ? 1 : 0);
-  }, 0);
   const completedToday = habits.filter((h) => h.completedToday).length;
+  const totalHabits = habits.length;
 
   return (
     <div className="min-h-full bg-gray-50 dark:bg-black max-w-[430px] mx-auto">
@@ -90,8 +87,8 @@ export default function HabitsPage() {
             className="ios-card dark:bg-[#1C1C1E] p-4 text-center"
           >
             <Flame className="w-6 h-6 text-orange-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalStreak}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Serie gesamt</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{completedToday}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Heute abgeschlossen</p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -101,8 +98,8 @@ export default function HabitsPage() {
             className="ios-card dark:bg-[#1C1C1E] p-4 text-center"
           >
             <Target className="w-6 h-6 text-primary-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{completedToday}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Heute erledigt</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{Math.round((completedToday / totalHabits) * 100) || 0}%</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Fortschritt</p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -112,7 +109,7 @@ export default function HabitsPage() {
             className="ios-card dark:bg-[#1C1C1E] p-4 text-center"
           >
             <TrendingUp className="w-6 h-6 text-success-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{habits.length}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalHabits}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Aktive Gewohnheiten</p>
           </motion.div>
         </div>
