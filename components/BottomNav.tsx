@@ -6,17 +6,17 @@ import { Home, ListTodo, Calendar, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const navItems = [
-  { href: '/dashboard', icon: Home, label: 'Dashboard' },
-  { href: '/habits', icon: ListTodo, label: 'Habits' },
-  { href: '/planner', icon: Calendar, label: 'Planner' },
-  { href: '/settings', icon: Settings, label: 'Settings' },
+  { href: '/dashboard', icon: Home, label: 'Heute' },
+  { href: '/habits', icon: ListTodo, label: 'Gewohnheiten' },
+  { href: '/planner', icon: Calendar, label: 'Planer' },
+  { href: '/settings', icon: Settings, label: 'Einstellungen' },
 ];
 
 export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 safe-area-bottom">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white/80 backdrop-blur-xl border-t border-gray-200 safe-area-bottom">
       <div className="flex items-center justify-around px-2 py-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href;

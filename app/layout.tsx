@@ -4,7 +4,7 @@ import BottomNav from '@/components/BottomNav';
 
 export const metadata: Metadata = {
   title: 'HabitFlow',
-  description: 'Track your habits, supplements, and daily tasks',
+  description: 'Verfolge deine Gewohnheiten, Nahrungsergänzungen und tägliche Aufgaben',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -37,14 +37,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="de">
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className="antialiased">
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full max-w-[430px] w-full mx-auto bg-gray-50">
           <main className="flex-1 overflow-y-auto pb-20">
             {children}
           </main>

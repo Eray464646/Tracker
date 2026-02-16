@@ -28,11 +28,15 @@
     position: fixed;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
     background-color: #F2F2F7;
+    display: flex;
+    justify-content: center;
   }
 
   #__next {
     height: 100%;
     overflow: hidden;
+    max-width: 430px;
+    width: 100%;
   }
 
   /* Custom scrollbar for webkit browsers */

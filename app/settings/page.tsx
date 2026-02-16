@@ -16,43 +16,43 @@ export default function SettingsPage() {
 
   const settingsSections = [
     {
-      title: 'Preferences',
+      title: 'Einstellungen',
       items: [
         {
           icon: Bell,
-          label: 'Notifications',
-          description: 'Push notifications for habits',
+          label: 'Benachrichtigungen',
+          description: 'Push-Benachrichtigungen für Gewohnheiten',
           type: 'toggle',
           value: notificationsEnabled,
           onChange: requestNotificationPermission,
         },
         {
           icon: Moon,
-          label: 'Dark Mode',
-          description: 'Coming soon',
+          label: 'Dunkler Modus',
+          description: 'Demnächst verfügbar',
           type: 'navigate',
         },
         {
           icon: Globe,
-          label: 'Language',
-          description: 'English',
+          label: 'Sprache',
+          description: 'Deutsch',
           type: 'navigate',
         },
       ],
     },
     {
-      title: 'Data & Privacy',
+      title: 'Daten & Datenschutz',
       items: [
         {
           icon: Lock,
-          label: 'Privacy',
-          description: 'Manage your data',
+          label: 'Datenschutz',
+          description: 'Verwalte deine Daten',
           type: 'navigate',
         },
         {
           icon: Smartphone,
-          label: 'Export Data',
-          description: 'Download your habits',
+          label: 'Daten exportieren',
+          description: 'Lade deine Gewohnheiten herunter',
           type: 'navigate',
         },
       ],
@@ -62,14 +62,14 @@ export default function SettingsPage() {
       items: [
         {
           icon: HelpCircle,
-          label: 'Help & FAQ',
-          description: 'Get support',
+          label: 'Hilfe & FAQ',
+          description: 'Erhalte Unterstützung',
           type: 'navigate',
         },
         {
           icon: Mail,
-          label: 'Contact Us',
-          description: 'Send feedback',
+          label: 'Kontakt',
+          description: 'Sende Feedback',
           type: 'navigate',
         },
       ],
@@ -77,12 +77,12 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-full bg-gray-50">
+    <div className="min-h-full bg-gray-50 max-w-[430px] mx-auto">
       {/* Header with Large Title */}
       <div className="bg-white safe-area-top">
         <div className="px-6 pt-6 pb-4">
-          <h1 className="text-4xl font-bold tracking-tight">Settings</h1>
-          <p className="text-sm text-gray-500 mt-1">Customize your experience</p>
+          <h1 className="text-4xl font-bold tracking-tight">Einstellungen</h1>
+          <p className="text-sm text-gray-500 mt-1">Passe dein Erlebnis an</p>
         </div>
       </div>
 
@@ -91,6 +91,7 @@ export default function SettingsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          whileTap={{ scale: 0.98 }}
           className="ios-card p-6 text-center"
         >
           <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl mx-auto mb-4 flex items-center justify-center">
@@ -99,7 +100,7 @@ export default function SettingsPage() {
           <h2 className="text-xl font-bold text-gray-900">HabitFlow</h2>
           <p className="text-sm text-gray-500 mt-1">Version 1.0.0</p>
           <p className="text-xs text-gray-400 mt-2">
-            Build better habits, one day at a time
+            Baue bessere Gewohnheiten auf, Tag für Tag
           </p>
         </motion.div>
 
@@ -118,9 +119,10 @@ export default function SettingsPage() {
               {section.items.map((item, index) => {
                 const Icon = item.icon;
                 return (
-                  <button
+                  <motion.button
                     key={item.label}
                     onClick={item.onChange}
+                    whileTap={{ scale: 0.98 }}
                     className="w-full px-4 py-3 flex items-center gap-3 ios-button text-left"
                   >
                     <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -147,7 +149,7 @@ export default function SettingsPage() {
                     ) : (
                       <ChevronRight className="w-5 h-5 text-gray-400" />
                     )}
-                  </button>
+                  </motion.button>
                 );
               })}
             </motion.div>
@@ -159,21 +161,25 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          whileTap={{ scale: 0.98 }}
           className="ios-card p-4"
         >
-          <h3 className="font-semibold text-gray-900 mb-2">Install App</h3>
+          <h3 className="font-semibold text-gray-900 mb-2">App installieren</h3>
           <p className="text-sm text-gray-500 mb-4">
-            Add HabitFlow to your home screen for the best experience
+            Füge HabitFlow zu deinem Startbildschirm hinzu für das beste Erlebnis
           </p>
-          <button className="w-full bg-primary-500 text-white font-semibold py-3 rounded-xl ios-button">
-            Add to Home Screen
-          </button>
+          <motion.button 
+            whileTap={{ scale: 0.98 }}
+            className="w-full bg-primary-500 text-white font-semibold py-3 rounded-xl ios-button"
+          >
+            Zum Startbildschirm hinzufügen
+          </motion.button>
         </motion.div>
 
         {/* Footer */}
         <div className="text-center text-xs text-gray-400 pb-4">
-          <p>Made with ❤️ for better habits</p>
-          <p className="mt-1">© 2024 HabitFlow. All rights reserved.</p>
+          <p>Mit ❤️ für bessere Gewohnheiten gemacht</p>
+          <p className="mt-1">© 2024 HabitFlow. Alle Rechte vorbehalten.</p>
         </div>
       </div>
     </div>

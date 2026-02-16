@@ -26,7 +26,7 @@ export default function PlannerPage() {
     },
     {
       id: '2',
-      title: 'Review PR',
+      title: 'PR überprüfen',
       time: '11:00',
       date: new Date().toISOString().split('T')[0],
       type: 'task',
@@ -34,7 +34,7 @@ export default function PlannerPage() {
     },
     {
       id: '3',
-      title: 'Lunch Break',
+      title: 'Mittagspause',
       time: '12:30',
       date: new Date().toISOString().split('T')[0],
       type: 'reminder',
@@ -54,14 +54,14 @@ export default function PlannerPage() {
   };
 
   const { daysInMonth, startingDayOfWeek } = getDaysInMonth(selectedDate);
-  const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthName = selectedDate.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
 
   const exportToCalendar = () => {
     // Create ICS file content
     const icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//HabitFlow//EN',
+      'PRODID:-//HabitFlow//DE',
       ...events.map(event => {
         const eventDate = new Date(event.date + 'T' + event.time);
         const dtstart = eventDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
@@ -81,27 +81,34 @@ export default function PlannerPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'habitflow-events.ics';
+    link.download = 'habitflow-termine.ics';
     link.click();
     URL.revokeObjectURL(url);
   };
 
+  const typeLabels: Record<string, string> = {
+    meeting: 'Termin',
+    task: 'Aufgabe',
+    reminder: 'Erinnerung'
+  };
+
   return (
-    <div className="min-h-full bg-gray-50">
+    <div className="min-h-full bg-gray-50 max-w-[430px] mx-auto">
       {/* Header with Large Title */}
       <div className="bg-white safe-area-top">
         <div className="px-6 pt-6 pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold tracking-tight">Planner</h1>
-              <p className="text-sm text-gray-500 mt-1">Schedule and organize your day</p>
+              <h1 className="text-4xl font-bold tracking-tight">Planer</h1>
+              <p className="text-sm text-gray-500 mt-1">Plane und organisiere deinen Tag</p>
             </div>
-            <button
+            <motion.button
+              whileTap={{ scale: 0.9 }}
               onClick={exportToCalendar}
               className="ios-button p-2 rounded-full bg-primary-50"
             >
               <Download className="w-5 h-5 text-primary-500" />
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
@@ -111,6 +118,7 @@ export default function PlannerPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          whileTap={{ scale: 0.98 }}
           className="ios-card p-4"
         >
           <div className="flex items-center justify-between mb-4">
@@ -120,7 +128,7 @@ export default function PlannerPage() {
           
           {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-2">
-            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
+            {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'].map((day) => (
               <div key={day} className="text-center text-xs font-medium text-gray-500 py-2">
                 {day}
               </div>
@@ -137,8 +145,9 @@ export default function PlannerPage() {
                 selectedDate.getFullYear() === new Date().getFullYear();
               
               return (
-                <button
+                <motion.button
                   key={day}
+                  whileTap={{ scale: 0.9 }}
                   className={`aspect-square rounded-full flex items-center justify-center text-sm font-medium ios-button ${
                     isToday
                       ? 'bg-primary-500 text-white'
@@ -146,7 +155,7 @@ export default function PlannerPage() {
                   }`}
                 >
                   {day}
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -155,15 +164,15 @@ export default function PlannerPage() {
         {/* Today's Schedule */}
         <div className="ios-card overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Today's Schedule</h2>
+            <h2 className="text-lg font-semibold">Heutiger Zeitplan</h2>
             <button className="ios-button text-primary-500 text-sm font-medium">
-              View All
+              Alle anzeigen
             </button>
           </div>
           
           {events.length === 0 ? (
             <div className="px-4 py-8 text-center text-gray-500">
-              <p>No events scheduled</p>
+              <p>Keine Termine geplant</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
@@ -173,6 +182,7 @@ export default function PlannerPage() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
+                  whileTap={{ scale: 0.98 }}
                   className="px-4 py-3 flex items-center gap-3"
                 >
                   <div
@@ -184,8 +194,8 @@ export default function PlannerPage() {
                     <div className="flex items-center gap-2 mt-1">
                       <Clock className="w-3 h-3 text-gray-400" />
                       <p className="text-sm text-gray-500">{event.time}</p>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 capitalize">
-                        {event.type}
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                        {typeLabels[event.type]}
                       </span>
                     </div>
                   </div>
@@ -200,10 +210,11 @@ export default function PlannerPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          whileTap={{ scale: 0.98 }}
           className="w-full ios-card p-4 flex items-center justify-center gap-2 text-primary-500 font-semibold ios-button"
         >
           <Plus className="w-5 h-5" />
-          Add Event
+          Termin hinzufügen
         </motion.button>
 
         {/* Quick Actions */}
@@ -212,26 +223,28 @@ export default function PlannerPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
+            whileTap={{ scale: 0.98 }}
             className="ios-card p-4 ios-button text-left"
           >
             <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center mb-2">
               <Clock className="w-5 h-5 text-primary-500" />
             </div>
-            <p className="font-semibold text-gray-900">Set Reminder</p>
-            <p className="text-xs text-gray-500 mt-1">Never miss important tasks</p>
+            <p className="font-semibold text-gray-900">Erinnerung setzen</p>
+            <p className="text-xs text-gray-500 mt-1">Verpasse keine wichtigen Aufgaben</p>
           </motion.button>
           
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
+            whileTap={{ scale: 0.98 }}
             className="ios-card p-4 ios-button text-left"
           >
             <div className="w-10 h-10 bg-success-50 rounded-full flex items-center justify-center mb-2">
               <Calendar className="w-5 h-5 text-success-500" />
             </div>
-            <p className="font-semibold text-gray-900">Week View</p>
-            <p className="text-xs text-gray-500 mt-1">Plan ahead effectively</p>
+            <p className="font-semibold text-gray-900">Wochenansicht</p>
+            <p className="text-xs text-gray-500 mt-1">Plane effektiv im Voraus</p>
           </motion.button>
         </div>
       </div>

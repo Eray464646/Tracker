@@ -28,7 +28,7 @@ export default function HabitsPage() {
       const defaultHabits: Habit[] = [
         {
           id: '1',
-          name: 'Morning Meditation',
+          name: 'Morgenmeditation',
           icon: '🧘',
           color: '#34C759',
           streak: 7,
@@ -37,7 +37,7 @@ export default function HabitsPage() {
         },
         {
           id: '2',
-          name: 'Read 30 Minutes',
+          name: '30 Minuten lesen',
           icon: '📚',
           color: '#007AFF',
           streak: 12,
@@ -46,7 +46,7 @@ export default function HabitsPage() {
         },
         {
           id: '3',
-          name: 'Workout',
+          name: 'Training',
           icon: '💪',
           color: '#FF3B30',
           streak: 5,
@@ -56,7 +56,7 @@ export default function HabitsPage() {
         },
         {
           id: '4',
-          name: 'Drink 2L Water',
+          name: '2L Wasser trinken',
           icon: '💧',
           color: '#5AC8FA',
           streak: 15,
@@ -89,13 +89,13 @@ export default function HabitsPage() {
   const completedToday = habits.filter((h) => h.completedToday).length;
 
   return (
-    <div className="min-h-full bg-gray-50">
+    <div className="min-h-full bg-gray-50 max-w-[430px] mx-auto">
       {/* Header with Large Title */}
       <div className="bg-white safe-area-top">
         <div className="px-6 pt-6 pb-4">
-          <h1 className="text-4xl font-bold tracking-tight">Habits</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Gewohnheiten</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Build better habits, one day at a time
+            Baue bessere Gewohnheiten auf, Tag für Tag
           </p>
         </div>
       </div>
@@ -106,31 +106,34 @@ export default function HabitsPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            whileTap={{ scale: 0.95 }}
             className="ios-card p-4 text-center"
           >
             <Flame className="w-6 h-6 text-orange-500 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">{totalStreak}</p>
-            <p className="text-xs text-gray-500 mt-1">Total Streaks</p>
+            <p className="text-xs text-gray-500 mt-1">Serie gesamt</p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
+            whileTap={{ scale: 0.95 }}
             className="ios-card p-4 text-center"
           >
             <Target className="w-6 h-6 text-primary-500 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">{completedToday}</p>
-            <p className="text-xs text-gray-500 mt-1">Done Today</p>
+            <p className="text-xs text-gray-500 mt-1">Heute erledigt</p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
+            whileTap={{ scale: 0.95 }}
             className="ios-card p-4 text-center"
           >
             <TrendingUp className="w-6 h-6 text-success-500 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">{habits.length}</p>
-            <p className="text-xs text-gray-500 mt-1">Active Habits</p>
+            <p className="text-xs text-gray-500 mt-1">Aktive Gewohnheiten</p>
           </motion.div>
         </div>
 
@@ -142,6 +145,7 @@ export default function HabitsPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
+              whileTap={{ scale: 0.98 }}
               className="ios-card p-4 ios-button cursor-pointer"
               onClick={() => toggleHabit(habit.id)}
             >
@@ -156,12 +160,12 @@ export default function HabitsPage() {
                   <h3 className="font-semibold text-gray-900">{habit.name}</h3>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs text-gray-500 capitalize">
-                      {habit.frequency}
-                      {habit.targetDays && ` • ${habit.targetDays}x/week`}
+                      {habit.frequency === 'daily' ? 'Täglich' : 'Wöchentlich'}
+                      {habit.targetDays && ` • ${habit.targetDays}x/Woche`}
                     </span>
                     <span className="text-xs text-orange-500 flex items-center gap-1">
                       <Flame className="w-3 h-3" />
-                      {habit.streak} days
+                      {habit.streak} Tage
                     </span>
                   </div>
                 </div>
@@ -198,27 +202,29 @@ export default function HabitsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          whileTap={{ scale: 0.98 }}
           className="w-full ios-card p-4 flex items-center justify-center gap-2 text-primary-500 font-semibold ios-button"
         >
           <Plus className="w-5 h-5" />
-          Add New Habit
+          Gewohnheit hinzufügen
         </motion.button>
 
         {/* Habit Templates */}
         <div className="ios-card p-4">
-          <h2 className="text-lg font-semibold mb-3">Suggested Habits</h2>
+          <h2 className="text-lg font-semibold mb-3">Vorgeschlagene Gewohnheiten</h2>
           <div className="space-y-2">
             {[
-              { name: 'Journal', icon: '✍️' },
-              { name: 'Learn Language', icon: '🗣️' },
+              { name: 'Tagebuch schreiben', icon: '✍️' },
+              { name: 'Sprache lernen', icon: '🗣️' },
               { name: 'Yoga', icon: '🧘‍♀️' },
-              { name: 'Healthy Eating', icon: '🥗' },
+              { name: 'Gesund essen', icon: '🥗' },
             ].map((template, index) => (
               <motion.button
                 key={template.name}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + index * 0.05 }}
+                whileTap={{ scale: 0.98 }}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 ios-button text-left"
               >
                 <span className="text-2xl">{template.icon}</span>
